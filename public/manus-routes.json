@@ -1,0 +1,23 @@
+{
+  "routes": [
+    { "path": "/", "title": "Accueil" },
+    { "path": "/boutique", "title": "Boutique" },
+    { "path": "/boutique/:slug", "title": "Produit" },
+    { "path": "/panier", "title": "Panier" },
+    { "path": "/services", "title": "Services" },
+    { "path": "/transport-aerien", "title": "Transport aérien" },
+    { "path": "/transport-maritime", "title": "Transport maritime" },
+    { "path": "/suivi", "title": "Suivi de colis" },
+    { "path": "/contact", "title": "Contact" },
+    { "path": "/a-propos", "title": "À propos" },
+    { "path": "/auth", "title": "Connexion" },
+    { "path": "/espace", "title": "Espace client" },
+    { "path": "/messages", "title": "Messagerie" },
+    { "path": "/admin", "title": "Administration" },
+    { "path": "/admin/commandes", "title": "Commandes — administration" },
+    { "path": "/admin/conversations", "title": "Conversations — administration" },
+    { "path": "/admin/expeditions/:id", "title": "Expédition — administration" },
+    { "path": "/admin/parametres", "title": "Paramètres — administration" },
+    { "path": "/admin/produits", "title": "Produits — administration" }
+  ]
+}
