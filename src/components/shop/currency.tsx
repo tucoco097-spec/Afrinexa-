@@ -26,14 +26,21 @@ export function useDisplayCurrency(): [Currency, (c: Currency) => void] {
 export function CurrencySwitch() {
   const [c, set] = useDisplayCurrency();
   return (
-    <div className="glass inline-flex rounded-full p-1 text-xs">
-      {(["XAF", "USD", "EUR"] as Currency[]).map((x) => (
+    <div
+      className="glass inline-flex min-h-11 items-center rounded-full p-1 text-xs"
+      role="group"
+      aria-label="Choisir la devise d’affichage"
+    >
+      {(["XAF", "USD", "EUR"] as Currency[]).map((currency) => (
         <button
-          key={x}
-          onClick={() => set(x)}
-          className={`rounded-full px-3 py-1.5 ${c === x ? "bg-brand text-primary-foreground" : "text-muted-foreground"}`}
+          key={currency}
+          type="button"
+          onClick={() => set(currency)}
+          aria-pressed={c === currency}
+          aria-label={`Afficher les prix en ${currency === "XAF" ? "franc CFA (FCFA)" : currency}`}
+          className={`min-h-9 rounded-full px-3 py-1.5 transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${c === currency ? "bg-brand text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
-          {x === "XAF" ? "FCFA" : x}
+          {currency === "XAF" ? "FCFA" : currency}
         </button>
       ))}
     </div>

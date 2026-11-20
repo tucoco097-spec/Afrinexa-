@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X, PackageSearch, ShoppingBag, MessageCircle } from "lucide-react";
 import { useCart } from "@/lib/shop";
 import { Button } from "@/components/ui/button";
@@ -17,147 +17,204 @@ const NAV = [
 ] as const;
 
 export function SiteHeader() {
-  const s = useSettings();
+  const settings = useSettings();
   const { user } = useUser();
   const roles = useRoles(user?.id).data;
   const [open, setOpen] = useState(false);
-  const count = (useCart(user?.id).data?.items ?? []).reduce((a, i) => a + i.quantity, 0);
-  const cartBtn = (
+  const count = (useCart(user?.id).data?.items ?? []).reduce(
+    (total, item) => total + item.quantity,
+    0,
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
+  const cartLink = (
     <Link
       to="/panier"
-      className="relative grid size-9 place-items-center rounded-full hover:bg-secondary"
-      aria-label="Panier"
+      className="relative grid size-11 shrink-0 place-items-center rounded-full transition duration-200 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+      aria-label={count > 0 ? `Panier, ${count} article(s)` : "Panier"}
+      title="Panier"
     >
-      <ShoppingBag className="size-5" />
+      <ShoppingBag className="size-5" aria-hidden="true" />
       {count > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-gold px-1 text-[10px] font-bold text-gold-foreground">
+        <span
+          aria-hidden="true"
+          className="absolute right-0 top-0 grid min-h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[10px] font-bold text-gold-foreground"
+        >
           {count}
         </span>
       )}
     </Link>
   );
+
+  const trackingLink = (
+    <Button asChild variant="glass" size="sm" className="min-h-11">
+      <Link to="/suivi" search={{ q: undefined }} aria-label="Suivi de colis">
+        <PackageSearch aria-hidden="true" /> Suivi
+      </Link>
+    </Button>
+  );
+
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
-      <div className="mx-auto mt-3 max-w-6xl px-3">
-        <div className="mb-2 flex items-center justify-between gap-3 px-3 text-[11px] text-muted-foreground">
-          <span className="hidden sm:inline">
-            Livraison selon devis : Afrique, Europe et destinations internationales
-          </span>
-          <span className="sm:hidden">Chine → Afrique → Europe</span>
-          <div className="flex items-center gap-2">
-            {s?.whatsapp && (
-              <a
-                href={`https://wa.me/${s.whatsapp.replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-success hover:underline"
-              >
-                <MessageCircle className="size-3.5" /> WhatsApp
-              </a>
-            )}
-            <CurrencySwitch />
-          </div>
-        </div>
-        <div className="glass flex h-14 items-center justify-between rounded-full px-4 shadow-card">
-          <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-            <span className="grid size-8 place-items-center rounded-full bg-brand text-sm text-primary-foreground">
-              A
+    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 shadow-card backdrop-blur-xl">
+      <div className="border-b border-border/60 bg-card/75">
+        <div className="mx-auto flex min-h-9 max-w-7xl items-center justify-between gap-3 px-4 text-[11px] text-muted-foreground sm:px-6">
+          <p className="truncate">
+            <span className="hidden sm:inline">
+              Livraison selon devis · Chine → Afrique, Europe et destinations confirmées
             </span>
-            <span>{s?.company_name ?? "Afrinexa"}</span>
-          </Link>
-          <nav aria-label="Navigation principale" className="hidden items-center gap-1 md:flex">
-            {NAV.map((n) => (
-              <Link
-                key={n.to}
-                to={n.to}
-                className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                activeProps={{ className: "text-foreground bg-secondary" }}
-              >
-                {n.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="hidden items-center gap-2 md:flex">
-            {cartBtn}
-            {user && (
-              <Button asChild variant="glass" size="sm">
-                <Link to="/messages" aria-label="Ouvrir la messagerie">
-                  <MessageCircle /> Messagerie
-                </Link>
-              </Button>
-            )}
-            <Button asChild variant="glass" size="sm">
-              <Link to="/suivi" search={{ q: undefined }}>
-                <PackageSearch /> Suivi
+            <span className="sm:hidden">Chine → Afrique → Europe · Livraison selon devis</span>
+          </p>
+          {settings?.whatsapp && (
+            <a
+              href={`https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-2 text-success transition duration-200 hover:bg-secondary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <MessageCircle className="size-3.5" aria-hidden="true" /> WhatsApp
+            </a>
+          )}
+        </div>
+      </div>
+
+      <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-3 px-3 sm:px-5">
+        <Link
+          to="/"
+          className="flex min-h-11 shrink-0 items-center gap-2 rounded-full pr-2 font-display text-lg font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <span
+            className="grid size-9 place-items-center rounded-full bg-brand text-sm text-primary-foreground"
+            aria-hidden="true"
+          >
+            A
+          </span>
+          <span>{settings?.company_name ?? "Afrinexa"}</span>
+        </Link>
+
+        <nav aria-label="Navigation principale" className="hidden items-center gap-0.5 xl:flex">
+          {NAV.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="rounded-full px-2.5 py-2 text-sm text-muted-foreground transition duration-200 hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              activeProps={{ className: "text-foreground bg-secondary" }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="hidden shrink-0 items-center gap-1.5 xl:flex">
+          <CurrencySwitch />
+          {cartLink}
+          {user && (
+            <Button asChild variant="glass" size="sm" className="min-h-11">
+              <Link to="/messages" aria-label="Ouvrir la messagerie">
+                <MessageCircle aria-hidden="true" /> Messagerie
               </Link>
             </Button>
-            {user ? (
-              <Button asChild variant="hero" size="sm">
-                <Link to={isStaff(roles) ? "/admin" : "/espace"}>
-                  {isStaff(roles) ? "Administration" : "Mon espace"}
-                </Link>
-              </Button>
-            ) : (
-              <Button asChild variant="hero" size="sm">
-                <Link to="/auth">Connexion</Link>
-              </Button>
-            )}
-          </div>
-          <div className="flex items-center gap-1 md:hidden">
-            {cartBtn}
-            <button
-              onClick={() => setOpen(!open)}
-              aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-              aria-expanded={open}
-              aria-controls="mobile-navigation"
-              className="grid size-9 place-items-center rounded-full hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              {open ? <X /> : <Menu />}
-            </button>
-          </div>
-        </div>
-        {open && (
-          <nav
-            id="mobile-navigation"
-            aria-label="Navigation mobile"
-            className="glass mt-2 flex flex-col gap-1 rounded-3xl p-3 md:hidden"
-            onClick={() => setOpen(false)}
-          >
-            <Link
-              to="/suivi"
-              search={{ q: undefined }}
-              className="rounded-xl px-3 py-2.5 font-medium text-accent"
-            >
-              Suivre un colis
-            </Link>
-            {user && (
-              <Link to="/messages" className="rounded-xl px-3 py-2.5">
-                Messagerie
-              </Link>
-            )}
-            {NAV.map((n) => (
-              <Link key={n.to} to={n.to} className="rounded-xl px-3 py-2.5">
-                {n.label}
-              </Link>
-            ))}
-            {user ? (
-              <Link
-                to={isStaff(roles) ? "/admin" : "/espace"}
-                className="rounded-xl bg-brand px-3 py-2.5 text-center font-semibold text-primary-foreground"
-              >
+          )}
+          {trackingLink}
+          {user ? (
+            <Button asChild variant="hero" size="sm" className="min-h-11">
+              <Link to={isStaff(roles) ? "/admin" : "/espace"}>
                 {isStaff(roles) ? "Administration" : "Mon espace"}
               </Link>
-            ) : (
-              <Link
-                to="/auth"
-                className="rounded-xl bg-brand px-3 py-2.5 text-center font-semibold text-primary-foreground"
-              >
-                Connexion
-              </Link>
-            )}
-          </nav>
-        )}
+            </Button>
+          ) : (
+            <Button asChild variant="hero" size="sm" className="min-h-11">
+              <Link to="/auth">Connexion</Link>
+            </Button>
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1 xl:hidden">
+          {cartLink}
+          <Link
+            to="/suivi"
+            search={{ q: undefined }}
+            className="grid size-11 place-items-center rounded-full text-accent transition duration-200 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-label="Suivi de colis"
+            title="Suivi de colis"
+          >
+            <PackageSearch className="size-5" aria-hidden="true" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setOpen((value) => !value)}
+            aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+            aria-expanded={open}
+            aria-controls="mobile-navigation"
+            className="grid size-11 place-items-center rounded-full transition duration-200 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+          </button>
+        </div>
       </div>
+
+      {open && (
+        <nav
+          id="mobile-navigation"
+          aria-label="Navigation mobile"
+          className="mx-auto flex max-h-[calc(100dvh-7rem)] max-w-7xl flex-col gap-1 overflow-y-auto border-t border-border/70 bg-background/95 p-4 shadow-card backdrop-blur-xl xl:hidden"
+          onClick={() => setOpen(false)}
+        >
+          <Link
+            to="/suivi"
+            search={{ q: undefined }}
+            className="min-h-11 rounded-xl px-3 py-2.5 font-semibold text-accent transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            Suivre un colis
+          </Link>
+          {user && (
+            <Link
+              to="/messages"
+              className="min-h-11 rounded-xl px-3 py-2.5 transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              Messagerie
+            </Link>
+          )}
+          {NAV.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="min-h-11 rounded-xl px-3 py-2.5 transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              {item.label}
+            </Link>
+          ))}
+          <div
+            className="border-t border-border/70 pt-3"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="mb-2 px-1 text-xs text-muted-foreground">Devise d’affichage</p>
+            <CurrencySwitch />
+          </div>
+          {user ? (
+            <Link
+              to={isStaff(roles) ? "/admin" : "/espace"}
+              className="mt-2 grid min-h-11 place-items-center rounded-xl bg-brand px-3 py-2.5 text-center font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              {isStaff(roles) ? "Administration" : "Mon espace"}
+            </Link>
+          ) : (
+            <Link
+              to="/auth"
+              className="mt-2 grid min-h-11 place-items-center rounded-xl bg-brand px-3 py-2.5 text-center font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              Connexion / inscription
+            </Link>
+          )}
+        </nav>
+      )}
     </header>
   );
 }

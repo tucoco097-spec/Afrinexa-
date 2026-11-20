@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { Plane, Ship, MapPin, CalendarClock, PackageX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TrackForm } from "@/components/site/TrackForm";
+import { TrackingSlideshow } from "@/components/site/TrackingSlideshow";
 import { ShipmentMap } from "@/components/site/ShipmentMap";
 import type { Coordinates } from "@/components/site/ShipmentMap";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -155,11 +156,13 @@ function TrackPage() {
       )}
 
       {data && <Result t={data} />}
+      <TrackingSlideshow />
     </div>
   );
 }
 
 function Result({ t }: { t: Tracked }) {
+  const reducedMotion = useReducedMotion();
   const pct = progressFor(t.mode, t.status);
   const Icon = t.mode === "air" ? Plane : Ship;
   const originCoordinates = parseCoordinates(
@@ -192,7 +195,7 @@ function Result({ t }: { t: Tracked }) {
     : null;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="mt-10 space-y-5"
     >
@@ -221,7 +224,7 @@ function Result({ t }: { t: Tracked }) {
             className="h-full bg-brand"
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 1.2, ease: "easeOut" }}
           />
         </div>
         <div className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
@@ -256,9 +259,9 @@ function Result({ t }: { t: Tracked }) {
             {t.events.map((e, i) => (
               <motion.li
                 key={i}
-                initial={{ opacity: 0, x: -10 }}
+                initial={reducedMotion ? false : { opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.06 }}
+                transition={reducedMotion ? { duration: 0 } : { delay: i * 0.06 }}
                 className="relative"
               >
                 <span

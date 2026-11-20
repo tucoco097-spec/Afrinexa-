@@ -74,18 +74,18 @@ export function ProductCard({
   }
 
   return (
-    <article className="glass overflow-hidden rounded-3xl transition hover:-translate-y-1 hover:shadow-glow">
+    <article className="glass overflow-hidden rounded-3xl transition duration-200 ease-out hover:-translate-y-1 hover:shadow-glow motion-reduce:transform-none">
       <Link
         to="/boutique/$slug"
         params={{ slug: p.slug }}
-        className="group block"
+        className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         aria-label={`Voir le produit ${p.name}`}
       >
         <div className="aspect-square overflow-hidden">
           <ProductImage
             path={p.images[0]}
             alt={p.name}
-            className="size-full transition duration-500 group-hover:scale-105"
+            className="size-full transition duration-200 group-hover:scale-[1.02] motion-reduce:transform-none"
           />
         </div>
       </Link>
@@ -108,7 +108,7 @@ export function ProductCard({
           className="mt-2 block font-display font-bold text-gold"
         />
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button asChild variant="glass" size="sm" className="min-w-0 flex-1">
+          <Button asChild variant="glass" size="sm" className="min-h-11 min-w-0 flex-1">
             <Link to="/boutique/$slug" params={{ slug: p.slug }}>
               Voir le produit
             </Link>
@@ -116,7 +116,7 @@ export function ProductCard({
           <Button
             variant="hero"
             size="sm"
-            className="min-w-0 flex-1"
+            className="min-h-11 min-w-0 flex-1"
             onClick={add}
             disabled={busy || p.stock === 0}
             aria-label={`Ajouter ${p.name} au panier`}

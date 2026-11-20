@@ -1,22 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import {
-  Plane,
-  Ship,
-  Search,
-  ShieldCheck,
-  PackageCheck,
-  FileText,
-  Handshake,
   ArrowRight,
   BadgePercent,
+  FileText,
   Globe2,
+  Handshake,
   MessageCircle,
+  PackageCheck,
+  Plane,
+  Search,
+  ShieldCheck,
+  Ship,
 } from "lucide-react";
 import hero from "@/assets/hero-port.jpg";
-
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TrackForm } from "@/components/site/TrackForm";
 import { Reveal } from "@/components/site/Reveal";
 import { ProductCard } from "@/components/shop/ProductCard";
@@ -31,96 +31,90 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Achetez et faites expédier vos marchandises entre la Chine, l’Afrique et l’Europe avec sourcing, contrôle qualité, fret aérien, fret maritime et tracking.",
+          "Découvrez les marchandises publiées dans le catalogue Afrinexa, demandez un sourcing et suivez vos expéditions entre la Chine, l’Afrique et l’Europe.",
       },
       { property: "og:title", content: "Afrinexa — Chine → Afrique → Europe" },
       {
         property: "og:description",
-        content: "Catalogue, sourcing, fret aérien et maritime, suivi de colis en ligne.",
+        content: "Catalogue de marchandises, sourcing, fret et suivi de colis.",
       },
     ],
   }),
   component: Index,
 });
 
-const SUPPLIED_PRODUCT_ASSETS = [
-  "IMG-20251127-WA0002.jpg",
-  "IMG-20251127-WA0003.jpg",
-  "IMG-20251127-WA0004.jpg",
-  "IMG-20251127-WA0005.jpg",
-  "IMG-20251127-WA0006.jpg",
-  "IMG-20251127-WA0007.jpg",
-  "IMG-20251127-WA0008.jpg",
-  "IMG-20251127-WA0009.jpg",
-  "IMG-20251127-WA0010.jpg",
-  "IMG-20251127-WA0011.jpg",
-  "IMG-20251127-WA0015.jpg",
-  "IMG-20251127-WA0016.jpg",
-  "IMG-20251127-WA0017.jpg",
-  "IMG-20251127-WA0018.jpg",
-  "IMG-20251127-WA0019.jpg",
-  "IMG-20251127-WA0021.jpg",
-  "IMG-20251127-WA0022.jpg",
-  "IMG-20251127-WA0023.jpg",
-  "IMG-20251127-WA0025.jpg",
-  "IMG-20251127-WA0026.jpg",
-  "IMG-20251127-WA0027.jpg",
-  "IMG-20251127-WA0028.jpg",
-  "IMG-20251127-WA0029.jpg",
-  "IMG-20251127-WA0030.jpg",
-];
-const CARRIER_ASSETS = ["chrono.jpg", "dhl.jpg", "fedex.jpg", "relais.jpg"];
+const SERVICES = [
+  {
+    to: "/transport-aerien",
+    icon: Plane,
+    title: "Fret aérien",
+    text: "Pour les envois urgents et les petites quantités. Les références AWB et les étapes confirmées sont consultables dans le suivi.",
+  },
+  {
+    to: "/transport-maritime",
+    icon: Ship,
+    title: "Fret maritime",
+    text: "Groupage LCL ou conteneur complet FCL, selon l’option retenue dans le devis.",
+  },
+  {
+    to: "/services",
+    icon: Handshake,
+    title: "Sourcing en Chine",
+    text: "Décrivez votre besoin à l’équipe pour rechercher et négocier auprès de fournisseurs.",
+  },
+  {
+    to: "/services",
+    icon: ShieldCheck,
+    title: "Contrôle qualité",
+    text: "L’inspection et les photos sont partagées lorsque le service est prévu au devis.",
+  },
+] as const;
 
 const STEPS = [
   {
     icon: Search,
-    t: "Choix du produit",
-    d: "Sélectionnez un produit publié ou décrivez votre besoin de sourcing.",
+    title: "Choix du produit",
+    text: "Sélectionnez un produit publié ou décrivez votre besoin de sourcing.",
   },
   {
     icon: FileText,
-    t: "Validation de commande",
-    d: "Confirmez les références, les quantités et la destination souhaitée.",
+    title: "Validation de commande",
+    text: "Confirmez les références, les quantités et la destination souhaitée.",
   },
   {
     icon: Handshake,
-    t: "Devis et transport",
-    d: "Un agent confirme le prix, le transport, les frais et les délais avant paiement.",
+    title: "Devis et transport",
+    text: "Un agent confirme le prix, le transport, les frais et les délais avant paiement.",
   },
   {
     icon: ShieldCheck,
-    t: "Contrôle qualité",
-    d: "L’inspection et les photos sont partagées lorsque le service est prévu au devis.",
+    title: "Contrôle qualité",
+    text: "L’inspection et les photos sont partagées lorsque le service est prévu au devis.",
   },
   {
     icon: BadgePercent,
-    t: "Paiement",
-    d: "Le paiement intégral ou l’acompte suit les conditions confirmées pour le produit.",
+    title: "Paiement",
+    text: "Le paiement intégral ou l’acompte suit les conditions confirmées pour le produit.",
   },
   {
     icon: Ship,
-    t: "Expédition",
-    d: "La marchandise part par fret aérien ou maritime selon l’option retenue.",
+    title: "Expédition",
+    text: "La marchandise part par fret aérien ou maritime selon l’option retenue.",
   },
   {
     icon: PackageCheck,
-    t: "Suivi",
-    d: "Consultez les événements confirmés avec votre référence d’expédition.",
+    title: "Suivi",
+    text: "Consultez les événements confirmés avec votre référence d’expédition.",
   },
   {
     icon: Globe2,
-    t: "Livraison",
-    d: "Dédouanement et remise à destination selon le devis final.",
+    title: "Livraison",
+    text: "Dédouanement et remise à destination selon le devis final.",
   },
 ];
 
-const normalizeCategory = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
 function Index() {
+  const reducedMotion = useReducedMotion();
   const products = useQuery({
     queryKey: ["home-featured-products"],
     queryFn: async () => {
@@ -130,7 +124,7 @@ function Index() {
         .eq("published", true)
         .order("popularity", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(8);
       if (error) throw error;
       return (data ?? []) as (Product & { categories: { name: string } | null })[];
     },
@@ -138,165 +132,159 @@ function Index() {
   const categories = useQuery(categoriesQuery);
   const settings = useSettings();
   const { user } = useUser();
-  const featuredCategories = [
-    { label: "Électronique & accessoires", terms: ["electronique", "accessoire"] },
-    { label: "Téléphones & informatique", terms: ["telephone", "smartphone", "informatique"] },
-    { label: "Véhicules & motos", terms: ["vehicule", "moto", "auto"] },
-    { label: "Maison & électroménager", terms: ["maison", "electromenager"] },
-    { label: "Vêtements & chaussures", terms: ["vetement", "mode", "chaussure"] },
-    { label: "Autres produits", terms: ["autre", "divers"] },
-  ];
-  const categoryRows = categories.data ?? [];
+  const topCategories = (categories.data ?? [])
+    .filter((category) => !category.parent_id)
+    .slice(0, 8);
 
   return (
     <>
-      <section className="relative flex min-h-[92vh] items-end overflow-hidden pb-16 pt-32">
+      <section className="relative isolate overflow-hidden bg-background">
         <img
           src={hero}
-          alt="Port de conteneurs la nuit avec un avion cargo"
+          alt="Port de conteneurs et transport de marchandises"
           width={1600}
           height={1008}
+          fetchPriority="high"
           className="absolute inset-0 size-full object-cover"
         />
-        <div className="bg-hero-fade absolute inset-0" />
-        <div className="relative mx-auto w-full max-w-6xl px-5">
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/65" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/25" />
+        <div className="relative mx-auto grid min-h-[620px] w-full min-w-0 max-w-7xl items-center gap-10 px-5 py-14 sm:px-8 md:py-20 lg:grid-cols-[1.05fr_.95fr]">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="max-w-3xl"
+            transition={
+              reducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+            }
+            className="w-full min-w-0 max-w-2xl"
           >
-            <p className="glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+            <p className="glass inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-gold">
               Chine → Afrique → Europe
             </p>
-            <h1 className="mt-6 text-4xl font-extrabold leading-[1.05] md:text-7xl">
-              Importez de Chine vers l’Afrique et l’Europe,{" "}
-              <span className="text-gradient">sans surprise.</span>
+            <h1 className="mt-6 break-words text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-5xl md:text-6xl xl:text-7xl">
+              Trouvez vos marchandises.{" "}
+              <span className="text-gradient">Suivez-les jusqu’à destination.</span>
             </h1>
-            <p className="mt-5 max-w-xl text-base text-muted-foreground md:text-lg">
-              Sourcing, contrôle qualité, fret aérien et maritime. Suivez chaque étape de vos
-              marchandises, de l'usine jusqu'à votre porte.
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              Parcourez les produits publiés par l’équipe Afrinexa, demandez un sourcing et
+              choisissez votre mode de transport selon le devis confirmé.
             </p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.7 }}
-            className="mt-8 max-w-2xl"
-          >
-            <TrackForm />
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap gap-3">
               <Button asChild variant="hero" size="lg">
-                <Link to="/boutique">Découvrir le catalogue</Link>
+                <a href="#catalogue">Découvrir le catalogue</a>
               </Button>
               <Button asChild variant="glass" size="lg">
                 <Link to="/services">Demander un sourcing</Link>
               </Button>
             </div>
+            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="size-4 text-accent" aria-hidden="true" /> Fiches publiées
+                par l’équipe
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <PackageCheck className="size-4 text-accent" aria-hidden="true" /> Suivi selon les
+                événements enregistrés
+              </span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={reducedMotion ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={
+              reducedMotion
+                ? { duration: 0 }
+                : { delay: 0.12, duration: 0.55, ease: [0.22, 1, 0.36, 1] }
+            }
+            className="glass w-full min-w-0 rounded-[2rem] p-5 shadow-card sm:p-7"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+              Suivi de colis
+            </p>
+            <h2 className="mt-3 text-2xl font-bold sm:text-3xl">Où est votre marchandise ?</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Saisissez votre code, numéro de commande, AWB, BL ou numéro de conteneur.
+            </p>
+            <div className="mt-6">
+              <TrackForm />
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button asChild variant="hero" size="lg">
+                <Link to="/suivi" search={{ q: undefined }}>
+                  Ouvrir le suivi <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button asChild variant="glass" size="lg">
+                <Link to="/boutique">Voir le catalogue</Link>
+              </Button>
+            </div>
+            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
+              Les informations affichées dépendent des événements confirmés dans le suivi.
+            </p>
           </motion.div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-20">
+      <section
+        id="catalogue"
+        aria-labelledby="catalogue-title"
+        className="mx-auto max-w-7xl px-5 py-14 sm:px-8 md:py-20"
+      >
         <Reveal>
-          <h2 className="text-3xl font-bold md:text-5xl">
-            Deux voies, <span className="text-gold">un seul suivi.</span>
-          </h2>
-        </Reveal>
-        <div className="mt-10 grid gap-4 md:grid-cols-6">
-          <Reveal className="md:col-span-4">
-            <Link
-              to="/transport-aerien"
-              className="group glass relative block h-full overflow-hidden rounded-3xl p-8 transition hover:-translate-y-1 hover:shadow-glow"
-            >
-              <Plane className="size-10 text-accent" />
-              <h3 className="mt-6 text-2xl font-bold">Fret aérien</h3>
-              <p className="mt-2 max-w-md text-muted-foreground">
-                Pour les envois urgents et les petites quantités. AWB, poids taxable et suivi vol
-                par vol.
+          <div className="flex flex-wrap items-end justify-between gap-5">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+                Catalogue Afrinexa
               </p>
-              <ArrowRight className="mt-6 transition group-hover:translate-x-2" />
-            </Link>
-          </Reveal>
-          <Reveal delay={0.1} className="md:col-span-2">
-            <Link
-              to="/services"
-              className="group relative block h-full overflow-hidden rounded-3xl bg-brand p-8 text-primary-foreground transition hover:-translate-y-1"
-            >
-              <Handshake className="size-10" />
-              <h3 className="mt-6 text-2xl font-bold">Sourcing en Chine</h3>
-              <p className="mt-2 opacity-90">Recherche et négociation avec les fournisseurs.</p>
-            </Link>
-          </Reveal>
-          <Reveal delay={0.15} className="md:col-span-2">
-            <div className="glass h-full rounded-3xl p-8">
-              <ShieldCheck className="size-10 text-gold" />
-              <h3 className="mt-6 text-xl font-bold">Contrôle qualité</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Inspection à l'entrepôt avant chaque départ.
-              </p>
-            </div>
-          </Reveal>
-          <Reveal delay={0.2} className="md:col-span-4">
-            <Link
-              to="/transport-maritime"
-              className="group glass relative block h-full overflow-hidden rounded-3xl p-8 transition hover:-translate-y-1 hover:shadow-glow"
-            >
-              <Ship className="size-10 text-accent" />
-              <h3 className="mt-6 text-2xl font-bold">Fret maritime</h3>
-              <p className="mt-2 max-w-md text-muted-foreground">
-                Groupage LCL ou conteneur complet FCL. BL, booking et numéro de conteneur.
-              </p>
-              <ArrowRight className="mt-6 transition group-hover:translate-x-2" />
-            </Link>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-5 py-12">
-        <Reveal>
-          <h2 className="text-3xl font-bold md:text-5xl">Comment ça marche</h2>
-        </Reveal>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <Reveal key={s.t} delay={i * 0.08}>
-              <div className="glass h-full rounded-3xl p-6">
-                <span className="font-display text-sm text-gold">0{i + 1}</span>
-                <s.icon className="mt-4 size-8 text-accent" />
-                <h3 className="mt-4 text-lg font-bold">{s.t}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-5 py-12">
-        <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">
-                Sélection catalogue
-              </p>
-              <h2 className="mt-2 text-3xl font-bold md:text-5xl">
-                Des produits, un accompagnement de bout en bout.
+              <h2 id="catalogue-title" className="mt-2 text-3xl font-bold sm:text-4xl md:text-5xl">
+                Des marchandises publiées par notre équipe.
               </h2>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
+                Cette sélection est chargée depuis les fiches publiées dans le panneau
+                d’administration. Les noms, images, prix et devises proviennent du catalogue.
+              </p>
             </div>
-            <Button asChild variant="glass">
+            <Button asChild variant="glass" size="lg">
               <Link to="/boutique">
-                Voir toute la boutique <ArrowRight />
+                Voir tout le catalogue <ArrowRight aria-hidden="true" />
               </Link>
             </Button>
           </div>
         </Reveal>
-        <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+        {topCategories.length > 0 && (
+          <div
+            className="mt-7 flex gap-2 overflow-x-auto pb-2"
+            aria-label="Catégories du catalogue"
+          >
+            {topCategories.map((category) => (
+              <Link
+                key={category.id}
+                to="/boutique"
+                search={{ q: undefined, cat: category.id, sort: undefined, page: undefined }}
+                className="glass min-h-11 shrink-0 rounded-full px-4 py-2.5 text-sm font-medium text-muted-foreground transition duration-200 hover:-translate-y-0.5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent motion-reduce:transform-none"
+              >
+                {category.name}
+              </Link>
+            ))}
+          </div>
+        )}
+        {categories.isError && (
+          <p role="status" className="mt-4 text-sm text-muted-foreground">
+            Les catégories ne sont pas disponibles pour le moment. Le catalogue complet reste
+            consultable.
+          </p>
+        )}
+
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
           {products.isLoading &&
-            Array.from({ length: 3 }).map((_, index) => (
-              <div
+            Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton
                 key={index}
-                className="glass aspect-[3/4] animate-pulse rounded-3xl"
+                className="aspect-[3/4] rounded-3xl"
                 role="status"
-                aria-label="Chargement des produits populaires"
+                aria-label="Chargement du catalogue"
               />
             ))}
           {products.data?.map((product) => (
@@ -306,184 +294,152 @@ function Index() {
         {products.isError && (
           <p
             role="alert"
-            className="mt-5 rounded-2xl border border-border p-4 text-sm text-muted-foreground"
+            className="glass mt-6 rounded-3xl p-5 text-center text-sm text-muted-foreground"
           >
-            Le catalogue populaire est momentanément indisponible. Consultez la boutique ou
-            réessayez plus tard.
+            Le catalogue est momentanément indisponible. Réessayez plus tard ou consultez la
+            boutique.
           </p>
         )}
         {products.data?.length === 0 && (
-          <p className="mt-5 rounded-2xl border border-border p-4 text-sm text-muted-foreground">
-            Aucun produit publié pour le moment. Notre équipe mettra cette sélection à jour dès que
-            le catalogue sera prêt.
-          </p>
+          <div className="glass mt-6 rounded-3xl p-8 text-center sm:p-10">
+            <PackageCheck className="mx-auto size-9 text-muted-foreground" aria-hidden="true" />
+            <p className="mt-3 font-semibold">Aucun produit publié pour le moment.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Les marchandises apparaîtront ici lorsqu’elles seront publiées dans le panneau
+              d’administration.
+            </p>
+          </div>
         )}
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-12">
+      <section
+        className="mx-auto max-w-7xl px-5 py-8 sm:px-8 md:py-14"
+        aria-labelledby="services-title"
+      >
         <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">
-                Commerce B2B & B2C
-              </p>
-              <h2 className="mt-2 text-3xl font-bold md:text-5xl">Trouvez, commandez, importez.</h2>
-            </div>
-            <Button asChild variant="glass">
-              <Link to="/boutique">
-                Explorer les catégories <ArrowRight />
-              </Link>
-            </Button>
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+              Commerce et logistique
+            </p>
+            <h2 id="services-title" className="mt-2 text-3xl font-bold sm:text-4xl md:text-5xl">
+              Un accompagnement adapté à votre projet.
+            </h2>
           </div>
         </Reveal>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredCategories.map((feature, i) => {
-            const category = categoryRows.find((row) =>
-              feature.terms.some((term) => normalizeCategory(row.name).includes(term)),
-            );
-            return (
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {SERVICES.map((service, index) => (
+            <Reveal key={service.title} delay={index * 0.05}>
               <Link
-                key={feature.label}
-                to="/boutique"
-                search={{ q: undefined, cat: category?.id, sort: undefined, page: undefined }}
-                className="group glass rounded-3xl p-6 transition hover:-translate-y-1 hover:shadow-glow"
+                to={service.to}
+                className="glass group flex h-full min-h-56 flex-col rounded-3xl p-6 transition duration-200 ease-out hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent motion-reduce:transform-none"
               >
-                <span className="grid size-11 place-items-center rounded-2xl bg-brand text-primary-foreground">
-                  0{i + 1}
-                </span>
-                <h3 className="mt-5 font-bold">{feature.label}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {category
-                    ? `Parcourez les produits de la catégorie ${category.name}.`
-                    : "Parcourez le catalogue ou demandez un sourcing selon votre besoin."}
+                <service.icon className="size-8 text-accent" aria-hidden="true" />
+                <h3 className="mt-5 text-xl font-bold">{service.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                  {service.text}
                 </p>
                 <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-accent">
-                  Voir les produits{" "}
-                  <ArrowRight className="size-4 transition group-hover:translate-x-1" />
+                  En savoir plus{" "}
+                  <ArrowRight
+                    className="size-4 transition duration-200 group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
                 </span>
               </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-5 py-12">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Reveal>
-            <div className="glass h-full rounded-3xl p-6">
-              <Globe2 className="size-8 text-accent" />
-              <h3 className="mt-5 text-xl font-bold">Destinations flexibles</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Chine, Afrique et Europe : nous adaptons le routage aérien ou maritime à votre
-                destination et votre budget.
-              </p>
-            </div>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <div className="glass h-full rounded-3xl p-6">
-              <BadgePercent className="size-8 text-gold" />
-              <h3 className="mt-5 text-xl font-bold">Paiement selon devis</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Un acompte est un paiement partiel prévu pour le produit. Il déclenche l’expédition
-                uniquement lorsque c’est indiqué ; le solde suit les conditions du produit ou du
-                devis. Sans acompte défini, le paiement intégral peut être demandé. Transport,
-                douane et livraison sont confirmés dans le devis final.
-              </p>
-            </div>
-          </Reveal>
-          <Reveal delay={0.16}>
-            <div className="glass h-full rounded-3xl p-6">
-              <MessageCircle className="size-8 text-accent" />
-              <h3 className="mt-5 text-xl font-bold">Un agent à vos côtés</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Échangez avec notre équipe via la messagerie de votre espace client pour valider
-                produit, transport et livraison.
-              </p>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-5 py-12">
-        <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">
-                Galerie catalogue
-              </p>
-              <h2 className="text-3xl font-bold md:text-5xl">Des visuels produits et transport.</h2>
-            </div>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Les images fournies sont conservées. Les noms, prix et stocks apparaissent dans le
-              catalogue à partir des fiches produit publiées et validées.
-            </p>
-          </div>
-        </Reveal>
-        <div className="mt-8 grid grid-cols-3 gap-2 md:grid-cols-6">
-          {SUPPLIED_PRODUCT_ASSETS.map((name, i) => (
-            <Reveal key={name} delay={(i % 6) * 0.03}>
-              <img
-                src={`/chipment/${name}`}
-                alt={`Photo de produit fournie pour le catalogue Afrinexa ${i + 1}`}
-                loading="lazy"
-                className="aspect-square w-full rounded-2xl border border-border bg-card object-contain p-1 transition duration-500 hover:scale-[1.02]"
-              />
             </Reveal>
           ))}
         </div>
-        <div className="mt-8 flex flex-wrap items-center gap-4 rounded-3xl border border-border bg-card/60 p-4">
-          <span className="text-sm font-semibold">Références de transport :</span>
-          {CARRIER_ASSETS.map((name) => (
-            <img
-              key={name}
-              src={`/chipment/${name}`}
-              alt={`Transport ${name.replace(".jpg", "")}`}
-              loading="lazy"
-              className="h-12 w-20 rounded-lg bg-white object-contain p-2"
-            />
+      </section>
+
+      <section
+        className="mx-auto max-w-7xl px-5 py-10 sm:px-8 md:py-16"
+        aria-labelledby="steps-title"
+      >
+        <Reveal>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+            De la demande à la livraison
+          </p>
+          <h2 id="steps-title" className="mt-2 text-3xl font-bold sm:text-4xl md:text-5xl">
+            Les étapes de votre commande
+          </h2>
+        </Reveal>
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {STEPS.map((step, index) => (
+            <Reveal key={step.title} delay={(index % 4) * 0.05}>
+              <article className="glass h-full rounded-3xl p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-card motion-reduce:transform-none">
+                <span className="font-display text-sm font-semibold text-gold">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <step.icon className="mt-4 size-7 text-accent" aria-hidden="true" />
+                <h3 className="mt-4 text-lg font-bold">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.text}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-12">
-        <Reveal>
-          <div className="glass rounded-3xl p-6 md:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">
-              Avis clients
-            </p>
-            <h2 className="mt-2 text-2xl font-bold md:text-3xl">
-              Des retours vérifiés, pas inventés.
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-              Les avis seront affichés ici après validation par l’équipe. Aucun témoignage n’est
-              publié sans source vérifiable.
-            </p>
-          </div>
-        </Reveal>
+      <section
+        className="mx-auto max-w-7xl px-5 py-8 sm:px-8 md:py-12"
+        aria-label="Informations pratiques"
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          <Reveal>
+            <article className="glass h-full rounded-3xl p-6">
+              <Globe2 className="size-8 text-accent" aria-hidden="true" />
+              <h3 className="mt-4 text-lg font-bold">Destinations selon le devis</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Les options de transport et de destination sont confirmées avec l’équipe avant
+                validation.
+              </p>
+            </article>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <article className="glass h-full rounded-3xl p-6">
+              <BadgePercent className="size-8 text-gold" aria-hidden="true" />
+              <h3 className="mt-4 text-lg font-bold">Prix et paiement clarifiés</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Le prix, le transport, les frais et les conditions de paiement sont confirmés dans
+                le devis.
+              </p>
+            </article>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <article className="glass h-full rounded-3xl p-6">
+              <MessageCircle className="size-8 text-accent" aria-hidden="true" />
+              <h3 className="mt-4 text-lg font-bold">Une équipe à vos côtés</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Échangez avec l’équipe via la messagerie de votre espace client ou la page Contact.
+              </p>
+            </article>
+          </Reveal>
+        </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-20">
+      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 md:py-20">
         <Reveal>
-          <div className="relative overflow-hidden rounded-[2rem] bg-brand p-10 text-center text-primary-foreground md:p-16">
-            <h2 className="text-3xl font-bold md:text-5xl">Prêt à importer ?</h2>
-            <p className="mx-auto mt-4 max-w-xl opacity-90">
-              Demandez un devis, échangez avec un agent et retrouvez vos commandes et expéditions
+          <div className="relative overflow-hidden rounded-[2rem] bg-brand p-7 text-center text-primary-foreground sm:p-10 md:p-14">
+            <h2 className="text-3xl font-bold sm:text-4xl md:text-5xl">
+              Un produit ou un besoin à sourcer ?
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed opacity-90 md:text-base">
+              Parcourez le catalogue, demandez un devis et retrouvez vos commandes et expéditions
               dans votre espace client.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Button asChild variant="gold" size="xl">
-                <Link to="/auth">Créer mon compte</Link>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Button asChild variant="gold" size="lg">
+                <Link to="/boutique">Explorer le catalogue</Link>
               </Button>
-              <Button asChild variant="glass" size="xl">
+              <Button asChild variant="glass" size="lg">
                 <Link to="/services">Demander un devis</Link>
               </Button>
-              <Button asChild variant="glass" size="xl">
+              <Button asChild variant="glass" size="lg">
                 <Link to={user ? "/messages" : "/auth"}>
-                  <MessageCircle /> {user ? "Messagerie" : "Connexion à la messagerie"}
+                  <MessageCircle aria-hidden="true" /> {user ? "Messagerie" : "Connexion"}
                 </Link>
               </Button>
               {settings?.whatsapp && (
-                <Button asChild variant="glass" size="xl">
+                <Button asChild variant="glass" size="lg">
                   <a
                     href={`https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`}
                     target="_blank"
@@ -493,7 +449,7 @@ function Index() {
                   </a>
                 </Button>
               )}
-              <Button asChild variant="glass" size="xl">
+              <Button asChild variant="glass" size="lg">
                 <Link to="/contact">Nous contacter</Link>
               </Button>
             </div>
