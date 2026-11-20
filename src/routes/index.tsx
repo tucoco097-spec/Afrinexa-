@@ -17,7 +17,6 @@ import {
 import hero from "@/assets/hero-port.jpg";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrackForm } from "@/components/site/TrackForm";
 import { Reveal } from "@/components/site/Reveal";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,12 +30,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Découvrez les marchandises publiées dans le catalogue Afrinexa, demandez un sourcing et suivez vos expéditions entre la Chine, l’Afrique et l’Europe.",
+          "Découvrez les marchandises du catalogue Afrinexa, demandez un sourcing et organisez vos expéditions entre la Chine, l’Afrique et l’Europe.",
       },
       { property: "og:title", content: "Afrinexa — Chine → Afrique → Europe" },
       {
         property: "og:description",
-        content: "Catalogue de marchandises, sourcing, fret et suivi de colis.",
+        content:
+          "Catalogue de marchandises, sourcing et fret entre la Chine, l’Afrique et l’Europe.",
       },
     ],
   }),
@@ -149,7 +149,7 @@ function Index() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/65" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/25" />
-        <div className="relative mx-auto grid min-h-[620px] w-full min-w-0 max-w-7xl items-center gap-10 px-5 py-14 sm:px-8 md:py-20 lg:grid-cols-[1.05fr_.95fr]">
+        <div className="relative mx-auto flex min-h-[620px] w-full min-w-0 max-w-7xl items-center px-5 py-14 sm:px-8 md:py-20">
           <motion.div
             initial={reducedMotion ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,7 +163,7 @@ function Index() {
             </p>
             <h1 className="mt-6 break-words text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-5xl md:text-6xl xl:text-7xl">
               Trouvez vos marchandises.{" "}
-              <span className="text-gradient">Suivez-les jusqu’à destination.</span>
+              <span className="text-gradient">De l’approvisionnement à la livraison.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
               Parcourez les produits publiés par l’équipe Afrinexa, demandez un sourcing et
@@ -182,46 +182,7 @@ function Index() {
                 <ShieldCheck className="size-4 text-accent" aria-hidden="true" /> Fiches publiées
                 par l’équipe
               </span>
-              <span className="inline-flex items-center gap-2">
-                <PackageCheck className="size-4 text-accent" aria-hidden="true" /> Suivi selon les
-                événements enregistrés
-              </span>
             </div>
-          </motion.div>
-
-          <motion.div
-            initial={reducedMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={
-              reducedMotion
-                ? { duration: 0 }
-                : { delay: 0.12, duration: 0.55, ease: [0.22, 1, 0.36, 1] }
-            }
-            className="glass w-full min-w-0 rounded-[2rem] p-5 shadow-card sm:p-7"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
-              Suivi de colis
-            </p>
-            <h2 className="mt-3 text-2xl font-bold sm:text-3xl">Où est votre marchandise ?</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Saisissez votre code, numéro de commande, AWB, BL ou numéro de conteneur.
-            </p>
-            <div className="mt-6">
-              <TrackForm />
-            </div>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Button asChild variant="hero" size="lg">
-                <Link to="/suivi" search={{ q: undefined }}>
-                  Ouvrir le suivi <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button asChild variant="glass" size="lg">
-                <Link to="/boutique">Voir le catalogue</Link>
-              </Button>
-            </div>
-            <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-              Les informations affichées dépendent des événements confirmés dans le suivi.
-            </p>
           </motion.div>
         </div>
       </section>
