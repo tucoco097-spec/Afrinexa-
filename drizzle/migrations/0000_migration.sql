@@ -17,22 +17,22 @@ create table public.user_roles (
 );
 grant select on public.user_roles to authenticated;
 grant all on public.user_roles to service_role;
+revoke insert, update, delete on public.user_roles from authenticated;
 alter table public.user_roles enable row level security;
 
 create or replace function public.has_role(_user_id uuid, _role app_role)
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.user_roles where user_id = _user_id and role = _role)
+  select coalesce(_user_id = auth.uid(), false)
+    and exists (select 1 from public.user_roles where user_id = _user_id and role = _role)
 $$;
 
 create or replace function public.is_staff(_user_id uuid)
 returns boolean language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.user_roles where user_id = _user_id and role in ('super_admin','admin','commercial','logistique','support','sourcing','finance'))
+  select coalesce(_user_id = auth.uid(), false)
+    and exists (select 1 from public.user_roles where user_id = _user_id and role in ('super_admin','admin','commercial','logistique','support','sourcing','finance'))
 $$;
 
 create policy "own roles read" on public.user_roles for select to authenticated using (user_id = auth.uid() or public.is_staff(auth.uid()));
-create policy "admins manage roles" on public.user_roles for all to authenticated
-  using (public.has_role(auth.uid(),'super_admin') or public.has_role(auth.uid(),'admin'))
-  with check (public.has_role(auth.uid(),'super_admin') or public.has_role(auth.uid(),'admin'));
 
 create policy "profile read" on public.profiles for select to authenticated using (id = auth.uid() or public.is_staff(auth.uid()));
 create policy "profile update own" on public.profiles for update to authenticated using (id = auth.uid() or public.is_staff(auth.uid()));
@@ -43,9 +43,6 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.profiles (id, full_name, email, phone)
   values (new.id, new.raw_user_meta_data->>'full_name', new.email, new.raw_user_meta_data->>'phone');
-  if not exists (select 1 from public.user_roles where role = 'super_admin') then
-    insert into public.user_roles (user_id, role) values (new.id, 'super_admin');
-  end if;
   insert into public.user_roles (user_id, role) values (new.id, 'client') on conflict do nothing;
   return new;
 end $$;
@@ -85,6 +82,7 @@ create table public.orders (
 );
 grant select, insert, update, delete on public.orders to authenticated;
 grant all on public.orders to service_role;
+grant usage, select on sequence public.order_seq to authenticated;
 alter table public.orders enable row level security;
 create policy "orders read" on public.orders for select to authenticated using (client_id = auth.uid() or public.is_staff(auth.uid()));
 create policy "orders staff write" on public.orders for all to authenticated using (public.is_staff(auth.uid())) with check (public.is_staff(auth.uid()));
@@ -110,6 +108,7 @@ create table public.shipments (
 );
 grant select, insert, update, delete on public.shipments to authenticated;
 grant all on public.shipments to service_role;
+grant usage, select on sequence public.shipment_seq to authenticated;
 alter table public.shipments enable row level security;
 create policy "shipments read" on public.shipments for select to authenticated using (client_id = auth.uid() or public.is_staff(auth.uid()));
 create policy "shipments staff write" on public.shipments for all to authenticated using (public.is_staff(auth.uid())) with check (public.is_staff(auth.uid()));

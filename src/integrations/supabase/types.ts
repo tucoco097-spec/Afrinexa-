@@ -378,7 +378,7 @@ export type Database = {
           name: string
           origin?: string | null
           popularity?: number
-          price?: number
+          price: number
           published?: boolean
           reference: string
           slug: string
@@ -597,9 +597,9 @@ export type Database = {
           email: string | null
           id: number
           phone: string | null
-          rate_eur_xaf: number
-          rate_usd_xaf: number
-          rates_updated_at: string
+          rate_eur_xaf: number | null
+          rate_usd_xaf: number | null
+          rates_updated_at: string | null
           slogan: string | null
           tracking_prefix: string
           updated_at: string
@@ -612,9 +612,9 @@ export type Database = {
           email?: string | null
           id?: number
           phone?: string | null
-          rate_eur_xaf?: number
-          rate_usd_xaf?: number
-          rates_updated_at?: string
+          rate_eur_xaf?: number | null
+          rate_usd_xaf?: number | null
+          rates_updated_at?: string | null
           slogan?: string | null
           tracking_prefix?: string
           updated_at?: string
@@ -627,9 +627,9 @@ export type Database = {
           email?: string | null
           id?: number
           phone?: string | null
-          rate_eur_xaf?: number
-          rate_usd_xaf?: number
-          rates_updated_at?: string
+          rate_eur_xaf?: number | null
+          rate_usd_xaf?: number | null
+          rates_updated_at?: string | null
           slogan?: string | null
           tracking_prefix?: string
           updated_at?: string
@@ -660,16 +660,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_access_conv: { Args: { _c: string }; Returns: boolean }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_staff: { Args: { _user_id: string }; Returns: boolean }
-      owns_open_cart: { Args: { _cart: string }; Returns: boolean }
       track_shipment: { Args: { _q: string }; Returns: Json }
     }
     Enums: {

@@ -1,4 +1,4 @@
-alter table public.site_settings add column rate_usd_xaf numeric not null default 600, add column rate_eur_xaf numeric not null default 655.957, add column rates_updated_at timestamptz not null default now();
+alter table public.site_settings add column rate_usd_xaf numeric, add column rate_eur_xaf numeric, add column rates_updated_at timestamptz;
 
 create table public.categories (
   id uuid primary key default gen_random_uuid(),
@@ -16,7 +16,7 @@ create table public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null, slug text unique not null, reference text unique not null,
   description text, images text[] not null default '{}', video_url text,
-  price numeric(14,2) not null default 0, currency text not null default 'XAF' check (currency in ('XAF','USD','EUR')),
+  price numeric(14,2) not null, currency text not null default 'XAF' check (currency in ('XAF','USD','EUR')),
   min_qty int not null default 1, stock int, weight_kg numeric(10,3), dimensions text,
   origin text default 'Chine', supplier text, lead_time text,
   category_id uuid references public.categories(id) on delete set null,
@@ -113,7 +113,8 @@ create table public.messages (
   body text, payload jsonb, reply_to uuid references public.messages(id) on delete set null,
   read_at timestamptz, created_at timestamptz not null default now()
 );
-grant select, insert, update on public.messages to authenticated;
+grant select, insert on public.messages to authenticated;
+grant update (read_at) on public.messages to authenticated;
 grant all on public.messages to service_role;
 alter table public.messages enable row level security;
 create or replace function public.can_access_conv(_c uuid) returns boolean language sql stable security definer set search_path = public as $$
@@ -121,7 +122,9 @@ create or replace function public.can_access_conv(_c uuid) returns boolean langu
 $$;
 create policy "msg read" on public.messages for select to authenticated using (public.can_access_conv(conversation_id));
 create policy "msg send" on public.messages for insert to authenticated with check (public.can_access_conv(conversation_id) and sender_id = auth.uid() and kind = 'text');
-create policy "msg mark read" on public.messages for update to authenticated using (public.can_access_conv(conversation_id));
+create policy "msg mark read" on public.messages for update to authenticated
+  using (public.can_access_conv(conversation_id) and sender_id is distinct from auth.uid())
+  with check (public.can_access_conv(conversation_id) and sender_id is distinct from auth.uid());
 
 create table public.cart_history (
   id uuid primary key default gen_random_uuid(),
