@@ -156,7 +156,7 @@ function TrackPage() {
       )}
 
       {data && <Result t={data} />}
-      <TrackingSlideshow />
+      <TrackingSlideshow mode="all" />
     </div>
   );
 }

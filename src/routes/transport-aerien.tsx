@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHero, Reveal } from "@/components/site/Reveal";
+import { TrackForm } from "@/components/site/TrackForm";
+import { TrackingSlideshow } from "@/components/site/TrackingSlideshow";
 import { AIR_STATUSES } from "@/lib/statuses";
 import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/transport-aerien")({
   head: () => ({
@@ -36,20 +37,39 @@ function Page() {
         }
         text="Idéal pour les envois urgents, les échantillons et les marchandises de valeur."
       />
-      <div className="mx-auto max-w-4xl px-5">
+      <div className="mx-auto max-w-4xl px-5 pb-10">
         <Reveal>
-          <div className="glass rounded-3xl p-6 md:p-10">
-            <h2 className="text-2xl font-bold">Les étapes de votre envoi</h2>
+          <section className="glass rounded-3xl p-6 md:p-8" aria-labelledby="air-tracking-title">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+              Suivi aérien
+            </p>
+            <h2 id="air-tracking-title" className="mt-2 text-2xl font-bold">
+              Suivez votre envoi aérien
+            </h2>
+            <p className="mb-5 mt-2 text-sm text-muted-foreground">
+              Saisissez le code de suivi, la commande ou le numéro AWB.
+            </p>
+            <TrackForm />
+          </section>
+        </Reveal>
+
+        <TrackingSlideshow mode="air" />
+
+        <Reveal>
+          <section className="glass mt-8 rounded-3xl p-6 md:p-10" aria-labelledby="air-steps-title">
+            <h2 id="air-steps-title" className="text-2xl font-bold">
+              Les étapes de votre envoi
+            </h2>
             <ol className="mt-6 grid gap-3 sm:grid-cols-2">
-              {AIR_STATUSES.map((s, i) => (
+              {AIR_STATUSES.map((status, index) => (
                 <li
-                  key={s}
+                  key={status}
                   className="flex items-center gap-3 rounded-2xl bg-secondary/60 p-3 text-sm"
                 >
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-primary-foreground">
-                    {i + 1}
+                    {index + 1}
                   </span>
-                  {s}
+                  {status}
                 </li>
               ))}
             </ol>
@@ -59,11 +79,11 @@ function Page() {
               </Button>
               <Button asChild variant="glass" size="xl">
                 <Link to="/suivi" search={{ q: undefined }}>
-                  Suivre un colis
+                  Suivi global
                 </Link>
               </Button>
             </div>
-          </div>
+          </section>
         </Reveal>
       </div>
     </>

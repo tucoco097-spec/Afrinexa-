@@ -64,27 +64,6 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 shadow-card backdrop-blur-xl">
-      <div className="border-b border-border/60 bg-card/75">
-        <div className="mx-auto flex min-h-9 max-w-7xl items-center justify-between gap-3 px-4 text-[11px] text-muted-foreground sm:px-6">
-          <p className="truncate">
-            <span className="hidden sm:inline">
-              Livraison selon devis · Chine → Afrique, Europe et destinations confirmées
-            </span>
-            <span className="sm:hidden">Chine → Afrique → Europe · Livraison selon devis</span>
-          </p>
-          {settings?.whatsapp && (
-            <a
-              href={`https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full px-2 text-success transition duration-200 hover:bg-secondary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              <MessageCircle className="size-3.5" aria-hidden="true" /> WhatsApp
-            </a>
-          )}
-        </div>
-      </div>
-
       <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-3 px-3 sm:px-5">
         <Link
           to="/"
