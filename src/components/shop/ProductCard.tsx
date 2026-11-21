@@ -79,20 +79,34 @@ export function ProductCard({
     <article
       className={`flex h-full flex-col overflow-hidden rounded-3xl shadow-card transition duration-300 ease-out hover:-translate-y-1.5 hover:shadow-glow motion-reduce:transform-none motion-reduce:transition-none ${tone === "light" ? "border border-slate-200 bg-white text-slate-900 hover:border-amber-400/70" : "glass hover:border-accent/35"}`}
     >
-      <Link
-        to="/boutique/$slug"
-        params={{ slug: p.slug }}
-        className="group/product block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        aria-label={`Voir le produit ${p.name}`}
-      >
-        <div className="aspect-square overflow-hidden">
-          <ProductImage
-            path={p.images[0]}
-            alt={p.name}
-            className="size-full transition-transform duration-500 ease-out group-hover/product:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
-          />
-        </div>
-      </Link>
+      <div className="relative">
+        <Link
+          to="/boutique/$slug"
+          params={{ slug: p.slug }}
+          className="group/product block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          aria-label={`Voir le produit ${p.name}`}
+        >
+          <div className="aspect-square overflow-hidden">
+            <ProductImage
+              path={p.images[0]}
+              alt={p.name}
+              className="size-full transition-transform duration-500 ease-out group-hover/product:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+            />
+          </div>
+        </Link>
+        {user && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-3 top-3 z-10 h-10 w-10 rounded-full border-slate-200 bg-white/95 text-slate-800 shadow-sm hover:bg-white focus-visible:ring-2 focus-visible:ring-accent"
+            onClick={toggleFavorite}
+            aria-label={favorite.data ? "Retirer des favoris" : "Ajouter aux favoris"}
+            aria-pressed={!!favorite.data}
+          >
+            <Heart className={favorite.data ? "size-4 fill-current text-gold" : "size-4"} />
+          </Button>
+        )}
+      </div>
       <div className="flex flex-1 flex-col p-4">
         {shownCategory && (
           <p
@@ -117,12 +131,12 @@ export function ProductCard({
           currency={p.currency}
           className={`mt-2 block font-display font-bold ${tone === "light" ? "text-amber-700" : "text-gold"}`}
         />
-        <div className="mt-auto flex flex-wrap gap-2 pt-4">
+        <div className="mt-auto grid grid-cols-1 gap-2 pt-4 xl:grid-cols-2">
           <Button
             asChild
             variant={tone === "light" ? "outline" : "glass"}
             size="sm"
-            className="min-h-11 min-w-0 flex-1"
+            className="min-h-11 w-full min-w-0 whitespace-normal px-2 text-center leading-tight"
           >
             <Link to="/boutique/$slug" params={{ slug: p.slug }}>
               Voir le produit
@@ -131,26 +145,14 @@ export function ProductCard({
           <Button
             variant="hero"
             size="sm"
-            className="min-h-11 min-w-0 flex-1"
+            className="min-h-11 w-full min-w-0 px-2"
             onClick={add}
             disabled={busy || p.stock === 0}
             aria-label={`Ajouter ${p.name} au panier`}
           >
-            <ShoppingBag className="size-4" />
-            {busy ? "Ajout…" : "Ajouter"}
+            <ShoppingBag className="size-4" aria-hidden="true" />
+            <span>{busy ? "Ajout…" : "Ajouter"}</span>
           </Button>
-          {user && (
-            <Button
-              variant="glass"
-              size="icon"
-              className="size-9 shrink-0"
-              onClick={toggleFavorite}
-              aria-label={favorite.data ? "Retirer des favoris" : "Ajouter aux favoris"}
-              aria-pressed={!!favorite.data}
-            >
-              <Heart className={favorite.data ? "size-4 fill-current text-gold" : "size-4"} />
-            </Button>
-          )}
         </div>
       </div>
     </article>
