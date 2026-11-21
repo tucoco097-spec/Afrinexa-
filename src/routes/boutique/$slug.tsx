@@ -57,7 +57,7 @@ function ProductPage() {
   const { user } = useUser();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [imageIndex, setImageIndex] = useState(0);
+  const [gallerySelection, setGallerySelection] = useState({ productId: "", index: 0 });
   const [quantity, setQuantity] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const productQuery = useQuery({
@@ -115,6 +115,10 @@ function ProductPage() {
   }
 
   const product = productQuery.data;
+  const imageIndex =
+    gallerySelection.productId === product.id
+      ? Math.min(gallerySelection.index, Math.max(product.images.length - 1, 0))
+      : 0;
   const minQuantity = Math.max(1, product.min_qty);
   const currentQuantity = quantity ?? minQuantity;
 
@@ -187,7 +191,7 @@ function ProductPage() {
                 <button
                   key={`${image}-${index}`}
                   type="button"
-                  onClick={() => setImageIndex(index)}
+                  onClick={() => setGallerySelection({ productId: product.id, index })}
                   aria-label={`Afficher l’image ${index + 1} de ${product.name}`}
                   aria-pressed={imageIndex === index}
                   className={`shrink-0 overflow-hidden rounded-2xl border-2 ${imageIndex === index ? "border-accent" : "border-transparent"}`}

@@ -42,20 +42,54 @@ export type CartItem = {
 const cache = new Map<string, string>();
 /** Image paths in the private "products" bucket are turned into signed URLs; absolute URLs pass through. */
 export function useImageUrl(path?: string | null) {
-  const [url, setUrl] = useState<string | undefined>(
-    path && /^(https?:|\/)/.test(path) ? path : cache.get(path ?? ""),
-  );
+  const [resolved, setResolved] = useState<{
+    path: string | null | undefined;
+    url: string | undefined;
+  }>({ path: undefined, url: undefined });
+  const directUrl = path && /^(https?:|\/)/.test(path) ? path : undefined;
+  const url =
+    directUrl ??
+    (path ? cache.get(path) : undefined) ??
+    (resolved.path === path ? resolved.url : undefined);
+
   useEffect(() => {
-    if (!path || /^(https?:|\/)/.test(path) || cache.has(path)) return;
+    let active = true;
+    if (!path) {
+      setResolved({ path, url: undefined });
+      return () => {
+        active = false;
+      };
+    }
+
+    if (/^(https?:|\/)/.test(path)) {
+      setResolved({ path, url: path });
+      return () => {
+        active = false;
+      };
+    }
+
+    const cachedUrl = cache.get(path);
+    if (cachedUrl) {
+      setResolved({ path, url: cachedUrl });
+      return () => {
+        active = false;
+      };
+    }
+
+    setResolved({ path, url: undefined });
     supabase.storage
       .from("products")
       .createSignedUrl(path, 60 * 60 * 24)
       .then(({ data }) => {
-        if (data?.signedUrl) {
+        if (active && data?.signedUrl) {
           cache.set(path, data.signedUrl);
-          setUrl(data.signedUrl);
+          setResolved({ path, url: data.signedUrl });
         }
       });
+
+    return () => {
+      active = false;
+    };
   }, [path]);
   return url;
 }
