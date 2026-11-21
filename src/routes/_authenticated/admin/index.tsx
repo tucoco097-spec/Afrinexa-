@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin/")({ component: Dashboard });
 
-type CountTable = "profiles" | "orders" | "shipments";
+type CountTable = "orders" | "shipments";
 
 function count(table: CountTable) {
   return async () => {
@@ -24,7 +24,17 @@ function count(table: CountTable) {
 
 function Dashboard() {
   const [query, setQuery] = useState("");
-  const clients = useQuery({ queryKey: ["admin-count", "profiles"], queryFn: count("profiles") });
+  const clients = useQuery({
+    queryKey: ["admin-count", "clients"],
+    queryFn: async () => {
+      const { count: total, error } = await supabase
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "client");
+      if (error) throw error;
+      return total ?? 0;
+    },
+  });
   const orders = useQuery({ queryKey: ["admin-count", "orders"], queryFn: count("orders") });
   const shipments = useQuery({
     queryKey: ["admin-count", "shipments"],
