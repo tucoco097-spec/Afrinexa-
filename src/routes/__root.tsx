@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
-import { SiteHeader } from "@/components/site/SiteHeader";
+import { MobileQuickNav, SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -149,7 +149,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <SiteHeader />
-      <main className="min-h-screen">
+      <MobileQuickNav />
+      <main className="min-h-screen pb-16 md:pb-0">
         <Outlet />
       </main>
       <SiteFooter />

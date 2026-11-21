@@ -17,9 +17,11 @@ type ProductCardData = Product & {
 export function ProductCard({
   p,
   categoryName,
+  tone = "default",
 }: {
   p: ProductCardData;
   categoryName?: string | null;
+  tone?: "default" | "light";
 }) {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -74,27 +76,35 @@ export function ProductCard({
   }
 
   return (
-    <article className="glass overflow-hidden rounded-3xl transition duration-200 ease-out hover:-translate-y-1 hover:shadow-glow motion-reduce:transform-none">
+    <article
+      className={`flex h-full flex-col overflow-hidden rounded-3xl shadow-card transition duration-300 ease-out hover:-translate-y-1.5 hover:shadow-glow motion-reduce:transform-none motion-reduce:transition-none ${tone === "light" ? "border border-slate-200 bg-white text-slate-900 hover:border-amber-400/70" : "glass hover:border-accent/35"}`}
+    >
       <Link
         to="/boutique/$slug"
         params={{ slug: p.slug }}
-        className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="group/product block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         aria-label={`Voir le produit ${p.name}`}
       >
         <div className="aspect-square overflow-hidden">
           <ProductImage
             path={p.images[0]}
             alt={p.name}
-            className="size-full transition duration-200 group-hover:scale-[1.02] motion-reduce:transform-none"
+            className="size-full transition-transform duration-500 ease-out group-hover/product:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
           />
         </div>
       </Link>
-      <div className="p-4">
-        {shownCategory && <p className="mb-1 text-xs font-medium text-accent">{shownCategory}</p>}
+      <div className="flex flex-1 flex-col p-4">
+        {shownCategory && (
+          <p
+            className={`mb-1 text-xs font-medium ${tone === "light" ? "text-slate-500" : "text-accent"}`}
+          >
+            {shownCategory}
+          </p>
+        )}
         <Link
           to="/boutique/$slug"
           params={{ slug: p.slug }}
-          className="line-clamp-2 min-h-10 text-sm font-semibold hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className={`line-clamp-2 min-h-10 text-sm font-semibold hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${tone === "light" ? "text-slate-900" : ""}`}
         >
           {p.name}
         </Link>
@@ -105,10 +115,15 @@ export function ProductCard({
         <Price
           amount={p.price}
           currency={p.currency}
-          className="mt-2 block font-display font-bold text-gold"
+          className={`mt-2 block font-display font-bold ${tone === "light" ? "text-amber-700" : "text-gold"}`}
         />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button asChild variant="glass" size="sm" className="min-h-11 min-w-0 flex-1">
+        <div className="mt-auto flex flex-wrap gap-2 pt-4">
+          <Button
+            asChild
+            variant={tone === "light" ? "outline" : "glass"}
+            size="sm"
+            className="min-h-11 min-w-0 flex-1"
+          >
             <Link to="/boutique/$slug" params={{ slug: p.slug }}>
               Voir le produit
             </Link>

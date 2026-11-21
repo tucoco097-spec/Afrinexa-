@@ -15,6 +15,8 @@ Le schéma Supabase de production est vide et l’utilisateur a refusé toute mo
 - Ajouter le démarrage OAuth Google avec Supabase Auth et un message d’état utile si le fournisseur n’est pas activé. Les URL de redirection et secrets OAuth restent à configurer dans Supabase par un canal sécurisé; le parcours email existant reste disponible.
 - Traiter les vulnérabilités npm avec des mises à jour compatibles et ajouter les en-têtes HTTP sûrs applicables à Vercel. Ne pas imposer de CSP sans tester les scripts SSR/hydratation, la carte et les redirections OAuth.
 - Préserver les pages et données existantes; aucun faux catalogue, prix, stock, statistique ou trajet ne sera ajouté.
+- Dynamiser `/boutique/` en reprenant seulement les motifs confirmés de la référence AfroSino Express (catégories vedettes et cartes de produits, https://afrosinoexpress.novextracking.com/index.php). Renforcer la hiérarchie du titre et des filtres, animer l’entrée des cartes et le réagencement après filtrage, et conserver la recherche, le tri, les devises, les catégories, la pagination et les images actuels.
+- Rapprocher visuellement l’accueil et le shell global de la référence : en-tête navy à deux bandes, hero ample avec transitions de texte, catégories en cartes, bande de services, encart sur les modalités de paiement, produits vedettes, parcours, footer et navigation mobile compacte. Ne changer ni API, schéma, données, authentification, routes ou flux de commande. Réutiliser les images Afrinexa existantes; n’emprunter aucun visuel/propos tiers ni créer de faux témoignage, tarif ou condition commerciale. Comme aucun avis Afrinexa ni système de dépôt d’avis n’est actuellement présent, ne pas afficher de témoignage ni d’action « Laisser un avis » non fonctionnelle.
 
 ## Structure du projet
 
@@ -32,11 +34,11 @@ Le schéma Supabase de production est vide et l’utilisateur a refusé toute mo
 
 - **Mouvement** : interface de logistique premium, entre centre de contrôle contemporain et commerce B2B, en s’inspirant de la hiérarchie du Reel sans en copier l’apparence.
 - **Principes** : informations véridiques; navigation admin lisible; contrastes forts; commandes simples et accessibles.
-- **Philosophie couleur** : conserver le bleu nuit et le bleu royal de la marque; le cyan signale l’action et le suivi, l’or reste une ponctuation premium.
-- **Paradigme de mise en page** : rail latéral fixe sur grand écran et navigation compacte sur mobile, avec espace de travail principal indépendant; pages transport en séquence verticale héros → saisie de suivi → diaporama → étapes.
+- **Philosophie couleur** : garder le bleu nuit pour les barres de navigation, l’or/ambre pour les appels à l’action et repères commerciaux, le fond clair pour les sections de catalogue, le cyan restant un accent Afrinexa.
+- **Paradigme de mise en page** : accueil et boutique sur fond clair à sections commerciales empilées, en-tête navy partagé et navigation compacte sur mobile; pages transport en séquence verticale héros → saisie de suivi → diaporama → étapes.
 - **Éléments distinctifs** : rail sombre; cartes produits sobres avec badge de stock réel; contrôles de carrousel discrets et accessibles.
 - **Interactions** : recherche instantanée, filtres explicites, navigation clavier, états de chargement/erreur visibles et aucun faux état vide.
-- **Animations** : transitions courtes et mesurées; conserver la prise en charge de `prefers-reduced-motion`.
+- **Animations** : transitions courtes et mesurées; dans le catalogue, révélation en cascade, réagencement doux des cartes, indicateur de catégorie actif et survol discret; conserver la prise en charge de `prefers-reduced-motion`.
 - **Typographie** : Manrope pour le texte fonctionnel et Sora pour les titres, comme dans le site existant.
 - **Essence de marque** : sourcing et logistique entre la Chine, l’Afrique et l’Europe; claire, fiable et professionnelle.
 - **Voix** : directe et informative. Exemples : « Où est votre marchandise ? » et « Stock déclaré : 0 — à réapprovisionner ».
