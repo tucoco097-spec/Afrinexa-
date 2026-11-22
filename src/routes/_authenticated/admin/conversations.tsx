@@ -35,27 +35,27 @@ function AdminConvs() {
   if (convs.data?.length === 0)
     return <p className="text-sm text-muted-foreground">Aucune conversation pour le moment.</p>;
   return (
-    <div className="glass grid h-[calc(100vh-12rem)] overflow-hidden rounded-3xl md:grid-cols-[280px_1fr]">
-      <aside className="overflow-y-auto border-r max-md:max-h-40">
+    <div className="glass grid h-[calc(100dvh-12rem)] min-w-0 grid-cols-1 overflow-hidden rounded-3xl md:grid-cols-[280px_minmax(0,1fr)]">
+      <aside className="min-w-0 overflow-y-auto border-r max-md:max-h-40">
         {convs.data?.map((x) => (
           <button
             key={x.id}
             onClick={() => setSel(x.id)}
-            className={`block w-full border-b p-4 text-left text-sm ${x.id === c?.id ? "bg-secondary" : ""}`}
+            className={`block w-full min-w-0 border-b p-4 text-left text-sm ${x.id === c?.id ? "bg-secondary" : ""}`}
           >
-            <p className="font-semibold">{x.profiles?.full_name || x.profiles?.email}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="truncate font-semibold">{x.profiles?.full_name || x.profiles?.email}</p>
+            <p className="truncate text-xs text-muted-foreground">
               {x.subject} · {x.department} · {fmtDateTime(x.last_message_at)}
             </p>
           </button>
         ))}
       </aside>
       {c && (
-        <section className="flex min-h-0 flex-col">
-          <header className="flex flex-wrap items-center gap-3 border-b p-4">
-            <div className="flex-1">
-              <p className="font-semibold">{c.profiles?.full_name || c.profiles?.email}</p>
-              <p className="text-xs text-muted-foreground">
+        <section className="flex min-h-0 min-w-0 flex-col">
+          <header className="flex min-w-0 flex-wrap items-center gap-3 border-b p-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold">{c.profiles?.full_name || c.profiles?.email}</p>
+              <p className="truncate text-xs text-muted-foreground">
                 {c.profiles?.email}
                 {c.profiles?.phone ? ` · ${c.profiles.phone}` : ""}
               </p>
@@ -63,7 +63,7 @@ function AdminConvs() {
             <select
               value={c.department}
               onChange={(e) => setDept(e.target.value)}
-              className="h-9 rounded-full border border-input bg-transparent px-3 text-sm"
+              className="h-9 max-w-full shrink-0 rounded-full border border-input bg-transparent px-3 text-sm"
             >
               {DEPTS.map((d) => (
                 <option key={d} value={d} className="bg-card">
@@ -72,7 +72,7 @@ function AdminConvs() {
               ))}
             </select>
           </header>
-          <div className="min-h-0 flex-1">
+          <div className="min-h-0 min-w-0 flex-1">
             <ChatThread
               conversationId={c.id}
               me={user.id}

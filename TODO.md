@@ -27,3 +27,12 @@
 - `pnpm audit --prod` : aucune vulnérabilité connue.
 - Les migrations 0000–0003 ont été appliquées au Supabase de production; les tests applicatifs n’écrivent pas dans Supabase.
 - Production : `/` répond HTTP 200; le nouvel asset aérien répond HTTP 200 avec `Content-Type: image/jpeg`; `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options` et HSTS sont présents.
+
+
+## Suivi — espace de discussion (22 novembre 2026)
+
+- [x] **Recadrer l’espace de discussion sur smartphone/Android et ajouter les pièces jointes et notes vocales.** Critères : « l’espace de discussion il n’est pas bien recadré » — corriger son cadrage, en particulier sur smartphone/Android; « pas la possibilité d’envoyé des pièces jointes et aussi les notes vocal ou les voice » — permettre les deux; conserver les accès existants et ne pas exposer publiquement les fichiers de discussion. **État :** conteneurs du fil, messages longs, en-tête, carte panier et compositeur recadrés; téléversement privé d’images, PDF, TXT, DOC/DOCX et audio; enregistrement au micro Android, aperçu/écoute audio et image; URL temporaires signées; limite 20 Mo et types allowlistés. Le bucket `conversation-attachments` reste privé; lecture réservée aux membres/staff via `app_private.can_access_conv`, dépôt authentifié dans son dossier utilisateur; aucune policy publique/anon. Les messages gardent `kind='text'` et leurs métadonnées vont dans `payload` JSONB; aucune table applicative ni migration de schéma n’a été modifiée. Les tests automatisés ne remplacent pas un essai en direct avec un compte client/admin connecté.
+
+- Vérifications de cette tâche : `pnpm typecheck` réussi; `pnpm lint` sans erreur (7 avertissements Fast Refresh préexistants); `pnpm test` — 5 fichiers, 14 tests réussis; `pnpm build` réussi. Les policies et paramètres du bucket privé ont été relus dans Supabase. Aucun déploiement Vercel n’a été lancé ou vérifié.
+
+- Limite opérationnelle : si l’objet privé est bien téléversé mais que l’insertion du message échoue, cet objet peut rester orphelin dans le bucket; aucune permission de suppression utilisateur n’a été ajoutée au-delà du périmètre confirmé.

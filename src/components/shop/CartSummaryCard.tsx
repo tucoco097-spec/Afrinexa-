@@ -34,8 +34,8 @@ export function CartSummaryCard({
     return a;
   }, {});
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-3xl border border-gold/30 bg-card">
-      <div className="flex items-center gap-2 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold">
+    <div className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-gold/30 bg-card">
+      <div className="flex min-w-0 items-center gap-2 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold">
         <ShoppingBag className="size-4" /> Sélection panier
         {q.data?.cart && q.data.cart.status !== "open" ? ` · ${q.data.cart.status}` : ""}
       </div>
@@ -43,7 +43,7 @@ export function CartSummaryCard({
         {clientName && <p className="text-xs text-muted-foreground">Client : {clientName}</p>}
         {items.length === 0 && <p className="text-sm text-muted-foreground">Panier vide.</p>}
         {items.map((i) => (
-          <div key={i.id} className="flex gap-3">
+          <div key={i.id} className="flex min-w-0 gap-3">
             <ProductImage path={i.image} alt={i.name} className="size-12 shrink-0 rounded-xl" />
             <div className="min-w-0 flex-1 text-sm">
               <p className="truncate font-medium">{i.name}</p>
@@ -51,7 +51,7 @@ export function CartSummaryCard({
                 Réf. {i.reference} · {i.quantity} × {formatMoney(Number(i.unit_price), i.currency)}
               </p>
             </div>
-            <p className="shrink-0 text-sm font-semibold">
+            <p className="min-w-0 shrink text-right text-sm font-semibold">
               {formatMoney(Number(i.unit_price) * i.quantity, i.currency)}
             </p>
           </div>
@@ -59,9 +59,14 @@ export function CartSummaryCard({
         {items.length > 0 && (
           <div className="border-t pt-3 text-sm">
             {Object.entries(totals).map(([c, v]) => (
-              <p key={c} className="flex justify-between font-bold">
+              <p
+                key={c}
+                className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1 font-bold"
+              >
                 <span>Total estimatif</span>
-                <span className="text-gold">{formatMoney(v, c as Currency)}</span>
+                <span className="min-w-0 break-words text-right text-gold">
+                  {formatMoney(v, c as Currency)}
+                </span>
               </p>
             ))}
             <p className="mt-1 text-[11px] text-muted-foreground">

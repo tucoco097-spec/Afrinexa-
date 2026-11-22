@@ -68,7 +68,7 @@ function Messages() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 pb-6 pt-24">
+    <div className="mx-auto w-full min-w-0 max-w-6xl px-5 pb-6 pt-24">
       <h1 className="sr-only">Messagerie client</h1>
       {!!convs.data?.length && (
         <div className="mb-3 md:hidden">
@@ -106,7 +106,7 @@ function Messages() {
           </Button>
         </div>
       ) : (
-        <div className="glass mt-2 grid h-[calc(100vh-8rem)] overflow-hidden rounded-3xl md:grid-cols-[260px_1fr]">
+        <div className="glass mt-2 grid h-[calc(100dvh-8rem)] min-w-0 grid-cols-1 overflow-hidden rounded-3xl md:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="hidden overflow-y-auto border-r md:block">
             {convs.data?.map((x) => (
               <button
@@ -131,24 +131,26 @@ function Messages() {
               </button>
             ))}
           </aside>
-          <section className="flex min-h-0 flex-col">
+          <section className="flex min-h-0 min-w-0 flex-col">
             {c && (
               <>
-                <header className="flex items-center gap-3 border-b p-4">
+                <header className="flex min-w-0 items-center gap-3 border-b p-4">
                   <span className="grid size-10 place-items-center rounded-full bg-brand font-bold text-primary-foreground">
                     A
                   </span>
-                  <div className="flex-1">
-                    <p className="font-semibold">Équipe {DEPT[c.department]}</p>
-                    <p className="text-xs text-muted-foreground">{c.subject}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">Équipe {DEPT[c.department]}</p>
+                    <p className="truncate text-xs text-muted-foreground">{c.subject}</p>
                   </div>
                   {c.cart_id && (
                     <Button asChild size="sm" variant="glass">
-                      <Link to="/panier">Panier</Link>
+                      <Link to="/panier" className="shrink-0">
+                        Panier
+                      </Link>
                     </Button>
                   )}
                 </header>
-                <div className="min-h-0 flex-1">
+                <div className="min-h-0 min-w-0 flex-1">
                   <ChatThread conversationId={c.id} me={user.id} />
                 </div>
               </>
