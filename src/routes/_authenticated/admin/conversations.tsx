@@ -15,6 +15,8 @@ function AdminConvs() {
   const qc = useQueryClient();
   const convs = useQuery({
     queryKey: ["admin-convs"],
+    refetchInterval: 2_000,
+    refetchIntervalInBackground: false,
     queryFn: async () =>
       (
         await supabase
