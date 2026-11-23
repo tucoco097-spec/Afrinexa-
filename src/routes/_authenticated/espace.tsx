@@ -8,6 +8,7 @@ import { ShipmentCard, type ShipmentRow } from "@/components/site/ShipmentCard";
 import { ProductImage } from "@/components/shop/ProductImage";
 import { formatMoney, type Currency } from "@/lib/money";
 import { fmtDate } from "@/lib/site";
+import { AccountSettings } from "@/components/auth/AccountSettings";
 
 export const Route = createFileRoute("/_authenticated/espace")({
   head: () => ({
@@ -97,6 +98,8 @@ function Espace() {
           </Link>
         </Button>
       </div>
+
+      <AccountSettings user={user} profile={profile.data} />
 
       <h2 className="mt-10 text-xl font-bold">Mes expéditions</h2>
       <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

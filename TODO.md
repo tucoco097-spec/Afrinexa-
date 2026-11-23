@@ -1,5 +1,23 @@
 # TODO — Refonte Afrinexa
 
+> **Priorité actuelle :** finaliser l’authentification premium décrite dans `pasted_content.txt`. Le suivi international des marchandises reste reporté.
+
+## Authentification premium — état de livraison
+
+> **État local :** l’expérience d’authentification, les routes de récupération, les réglages de compte et la séparation des rôles sont implémentés. Le suivi international reste reporté. La configuration de redirection/SMTP Supabase en production n’a pas été vérifiée. La case d’acceptation des conditions existe, mais aucun texte officiel ni page de conditions n’a été fourni; le consentement ne doit pas être considéré prêt pour la production avant d’ajouter ce contenu.
+
+- [x] **Créer l’expérience login/signup plein écran AFRINEXA.** Critères : fond noir profond, sphères dorées d’apparence métallique de tailles et profondeurs différentes, reflets, ombres, lumière, flottement et rotation lents, quelques particules discrètes; panneau central responsive transparent/glassmorphism avec bordure dorée et ombre douce; marque « AFRINEXA », signature « GLOBAL LOGISTICS & CARGO TRACKING » et slogan « Connecting the World. Delivering Trust. »; apparition progressive du logo avec reflet doré et panneau; Login et Sign up restent dans une seule interface avec fondu, déplacement horizontal et panneau animé; champs et boutons ont des états de focus, survol, erreur et chargement lisibles; le rendu reste fluide sur téléphone et ordinateur, ne masque jamais les champs, et respecte `prefers-reduced-motion` ainsi qu’un contrôle manuel de réduction. La référence image n’étant pas présente dans les pièces jointes examinées, la composition doit s’appuyer sur le cahier des charges écrit.
+
+- [ ] **Compléter Login et Sign up sans maquette fictive.** Critères Login : copies anglaises « WELCOME BACK », « Sign in to your AFRINEXA account. », « SIGN IN », « Don't have an account? », « CREATE ACCOUNT »; email, mot de passe avec afficher/masquer, validation, messages sobres, indicateur de chargement, « Remember Me » et « Forgot Password? ». Critères Sign up : copies anglaises « CREATE YOUR ACCOUNT », « Join AFRINEXA and discover a better logistics experience. », « CREATE ACCOUNT », « Already have an account? », « SIGN IN »; nom complet, email, téléphone, pays, mot de passe, confirmation, robustesse, validation d’email/téléphone, concordance des mots de passe et consentement explicite aux conditions générales. Aucun formulaire ne peut définir un rôle admin. **État :** parcours et validations implémentés; consentement par case requis, mais publication des inscriptions en conformité reste bloquée jusqu’à fourniture et ajout des conditions officielles et de leur lien.
+
+- [x] **Ajouter la récupération et la réinitialisation du mot de passe.** Critères : écran « RESET YOUR PASSWORD », explication « Enter your email address to receive a password reset link. », email requis, bouton « SEND RESET LINK », confirmation après envoi sans révéler si une adresse existe, gestion du lien Supabase vers une page de nouveau mot de passe, confirmation du nouveau mot de passe et erreurs compréhensibles. Aucun mot de passe n’est stocké en clair; la remise email dépend des réglages de redirection et de SMTP Supabase et ne doit pas être annoncée comme opérationnelle sans configuration confirmée.
+
+- [x] **Compléter l’espace client avec profil modifiable et changement de mot de passe.** Critères : le profil affiche et permet de modifier les champs déjà existants (nom, téléphone, pays et autres champs de profil pertinents sans migration); garder les commandes, numéros de suivi, expéditions, historique, favoris et déconnexion existants; ajouter un parcours de changement de mot de passe qui valide confirmation/robustesse et utilise la session Supabase; afficher sauvegarde, chargement et erreurs; préserver la protection des routes privées.
+
+- [x] **Conserver la séparation sécurisée entre clients et administrateurs.** Critères : l’inscription publique crée un compte client selon le déclencheur existant; aucune option de formulaire ou métadonnée utilisateur ne peut attribuer un rôle admin/staff; `/admin` reste soumis aux contrôles de rôle et RLS actuels; aucun changement de schéma/migration ni édition des fichiers Supabase générés n’est requis pour cette étape. L’interface « Remember Me » mémorise uniquement l’email, jamais le mot de passe, car le client Supabase généré persiste actuellement les sessions.
+
+- [x] **Synchroniser les routes d’authentification.** Critères : déclarer dans `public/manus-routes.json` les nouvelles routes de récupération/réinitialisation; masquer header, navigation mobile et footer du site dans l’expérience auth plein écran, sans toucher au shell des autres pages; laisser TanStack générer son arbre de routes au lieu d’éditer `routeTree.gen.ts` manuellement.
+
 - [x] **Retirer la bande d’annonce de l’en-tête.** Critère : supprimer du header, sur ordinateur comme sur mobile, le texte « Chine → Afrique → Europe · Livraison selon devis » montré dans la capture; ne pas supprimer par effet de bord le contenu utile qui se trouve ailleurs sur les pages. **État :** retirée du header partagé; le contenu des pages reste inchangé.
 
 - [x] **Retirer le suivi de colis de la page d’accueil.** Critères : retirer du hero d’accueil le champ de saisie du code, la carte « Suivi de colis » et son bouton direct; conserver `/suivi`, les pages de fret aérien et maritime et les liens de navigation dédiés. **État :** bloc retiré de l’accueil; suivi conservé dans ses espaces dédiés.
@@ -22,7 +40,7 @@
 
 - `pnpm typecheck` : réussi.
 - `pnpm lint` : 0 erreur; 7 avertissements `react-refresh/only-export-components` existants dans les composants UI/devises, hors fichiers retouchés.
-- `pnpm test` : 4 fichiers, 11 tests réussis.
+- `pnpm test` : 6 fichiers, 16 tests réussis.
 - `pnpm build` : réussi.
 - `pnpm audit --prod` : aucune vulnérabilité connue.
 - Les migrations 0000–0003 ont été appliquées au Supabase de production; les tests applicatifs n’écrivent pas dans Supabase.

@@ -14,7 +14,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as PanierRouteImport } from './routes/panier'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SuiviRouteImport } from './routes/suivi'
 import { Route as TransportAerienRouteImport } from './routes/transport-aerien'
@@ -55,9 +57,19 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PanierRoute = PanierRouteImport.update({
   id: '/panier',
   path: '/panier',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRoute = ServicesRouteImport.update({
@@ -146,7 +158,9 @@ export interface FileRoutesByFullPath {
   '/a-propos': typeof AProposRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/panier': typeof PanierRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRoute
   '/suivi': typeof SuiviRoute
   '/transport-aerien': typeof TransportAerienRoute
@@ -168,7 +182,9 @@ export interface FileRoutesByTo {
   '/a-propos': typeof AProposRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/panier': typeof PanierRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRoute
   '/suivi': typeof SuiviRoute
   '/transport-aerien': typeof TransportAerienRoute
@@ -191,7 +207,9 @@ export interface FileRoutesById {
   '/a-propos': typeof AProposRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/panier': typeof PanierRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRoute
   '/suivi': typeof SuiviRoute
   '/transport-aerien': typeof TransportAerienRoute
@@ -215,7 +233,9 @@ export interface FileRouteTypes {
     | '/a-propos'
     | '/auth'
     | '/contact'
+    | '/forgot-password'
     | '/panier'
+    | '/reset-password'
     | '/services'
     | '/suivi'
     | '/transport-aerien'
@@ -237,7 +257,9 @@ export interface FileRouteTypes {
     | '/a-propos'
     | '/auth'
     | '/contact'
+    | '/forgot-password'
     | '/panier'
+    | '/reset-password'
     | '/services'
     | '/suivi'
     | '/transport-aerien'
@@ -259,7 +281,9 @@ export interface FileRouteTypes {
     | '/a-propos'
     | '/auth'
     | '/contact'
+    | '/forgot-password'
     | '/panier'
+    | '/reset-password'
     | '/services'
     | '/suivi'
     | '/transport-aerien'
@@ -283,7 +307,9 @@ export interface RootRouteChildren {
   AProposRoute: typeof AProposRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   PanierRoute: typeof PanierRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ServicesRoute: typeof ServicesRoute
   SuiviRoute: typeof SuiviRoute
   TransportAerienRoute: typeof TransportAerienRoute
@@ -329,11 +355,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/panier': {
       id: '/panier'
       path: '/panier'
       fullPath: '/panier'
       preLoaderRoute: typeof PanierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services': {
@@ -489,7 +529,9 @@ const rootRouteChildren: RootRouteChildren = {
   AProposRoute: AProposRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   PanierRoute: PanierRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ServicesRoute: ServicesRoute,
   SuiviRoute: SuiviRoute,
   TransportAerienRoute: TransportAerienRoute,

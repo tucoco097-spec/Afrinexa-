@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  useRouterState,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
@@ -136,8 +137,17 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const fullScreenAuth = ["/auth", "/forgot-password", "/reset-password"].includes(pathname);
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        try {
+          window.sessionStorage.removeItem("afrinexa:password-recovery-at");
+        } catch {
+          // Ignore storage restrictions; the recovery marker expires automatically.
+        }
+      }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
@@ -148,12 +158,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <SiteHeader />
-      <MobileQuickNav />
-      <main className="min-h-screen pb-16 md:pb-0">
+      {!fullScreenAuth && <SiteHeader />}
+      {!fullScreenAuth && <MobileQuickNav />}
+      <main className={fullScreenAuth ? "min-h-screen" : "min-h-screen pb-16 md:pb-0"}>
         <Outlet />
       </main>
-      <SiteFooter />
+      {!fullScreenAuth && <SiteFooter />}
       <Toaster />
     </QueryClientProvider>
   );

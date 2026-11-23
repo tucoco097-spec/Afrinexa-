@@ -11,6 +11,8 @@
     { "path": "/contact", "title": "Contact" },
     { "path": "/a-propos", "title": "À propos" },
     { "path": "/auth", "title": "Connexion" },
+    { "path": "/forgot-password", "title": "Réinitialiser le mot de passe" },
+    { "path": "/reset-password", "title": "Nouveau mot de passe" },
     { "path": "/espace", "title": "Espace client" },
     { "path": "/messages", "title": "Messagerie" },
     { "path": "/admin", "title": "Administration" },
