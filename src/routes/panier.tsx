@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Minus, Plus, Trash2, MessageSquare, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, MessageSquare, ShoppingBag, LoaderCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,6 +31,30 @@ function CartPage() {
   const { user, ready } = useUser();
   const cart = useCart(user?.id);
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const items = cart.data?.items ?? [];
+
+  async function submitCart() {
+    const cartId = cart.data?.cartId;
+    if (!cartId || !items.length || submitting) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.rpc("submit_cart", { _cart_id: cartId });
+      if (error) throw error;
+      await Promise.all([
+        cart.refresh(),
+        qc.invalidateQueries({ queryKey: ["cart-card", cartId] }),
+        qc.invalidateQueries({ queryKey: ["my-convs", user?.id] }),
+      ]);
+      toast.success("Votre panier validé a été transmis au super administrateur.");
+      navigate({ to: "/messages" });
+    } catch (error) {
+      toast.error((error as Error).message || "Impossible de transmettre votre commande.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function setQty(id: string, q: number) {
     const { error } =
@@ -52,7 +77,6 @@ function CartPage() {
       </div>
     );
 
-  const items = cart.data?.items ?? [];
   const totals = items.reduce<Record<string, number>>((a, i) => {
     a[i.currency] = (a[i.currency] ?? 0) + Number(i.unit_price) * i.quantity;
     return a;
@@ -62,8 +86,8 @@ function CartPage() {
     <div className="mx-auto max-w-4xl px-5 pb-10 pt-28">
       <h1 className="text-3xl font-bold md:text-4xl">Mon panier</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Votre sélection est envoyée automatiquement à un commercial. Ce n'est pas encore une
-        commande : vous recevrez un devis à valider.
+        Vérifiez vos articles puis validez pour transmettre le panier complet dans votre discussion
+        avec le super administrateur.
       </p>
       <div className="mt-6 space-y-3">
         {cart.isLoading && <Skeleton className="h-28 rounded-3xl" />}
@@ -139,10 +163,15 @@ function CartPage() {
             </p>
           ))}
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button asChild variant="hero" size="xl" className="flex-1">
-              <Link to="/messages">
-                <MessageSquare /> Discuter avec un commercial
-              </Link>
+            <Button
+              variant="hero"
+              size="xl"
+              className="flex-1"
+              disabled={submitting || !cart.data?.cartId}
+              onClick={() => void submitCart()}
+            >
+              {submitting ? <LoaderCircle className="animate-spin" /> : <MessageSquare />}
+              {submitting ? "Envoi en cours…" : "Valider et envoyer ma commande"}
             </Button>
             <Button asChild variant="glass" size="xl">
               <Link to="/boutique">Continuer mes achats</Link>

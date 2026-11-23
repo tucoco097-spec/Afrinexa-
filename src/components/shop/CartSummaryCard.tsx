@@ -33,11 +33,19 @@ export function CartSummaryCard({
     a[i.currency] = (a[i.currency] ?? 0) + Number(i.unit_price) * i.quantity;
     return a;
   }, {});
+  const statusLabel: Record<string, string> = {
+    submitted: "Commande validée",
+    quoted: "Devis préparé",
+    confirmed: "Confirmée",
+    closed: "Clôturée",
+  };
   return (
     <div className="w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-gold/30 bg-card">
       <div className="flex min-w-0 items-center gap-2 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold">
         <ShoppingBag className="size-4" /> Sélection panier
-        {q.data?.cart && q.data.cart.status !== "open" ? ` · ${q.data.cart.status}` : ""}
+        {q.data?.cart && q.data.cart.status !== "open"
+          ? ` · ${statusLabel[q.data.cart.status] ?? q.data.cart.status}`
+          : ""}
       </div>
       <div className="space-y-3 p-4">
         {clientName && <p className="text-xs text-muted-foreground">Client : {clientName}</p>}

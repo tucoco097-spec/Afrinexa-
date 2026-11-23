@@ -660,6 +660,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      submit_cart: { Args: { _cart_id: string }; Returns: string }
       track_shipment: { Args: { _q: string }; Returns: Json }
     }
     Enums: {

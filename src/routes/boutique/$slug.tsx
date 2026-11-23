@@ -132,9 +132,8 @@ function ProductPage() {
     try {
       await addToCart(user.id, product.id, currentQuantity);
       await queryClient.invalidateQueries({ queryKey: ["cart", user.id] });
-      toast.success("Ajouté au panier", {
-        action: { label: "Voir le panier", onClick: () => navigate({ to: "/panier" }) },
-      });
+      toast.success("Ajouté au panier");
+      navigate({ to: "/panier" });
     } catch (error) {
       toast.error((error as Error).message || "Impossible d’ajouter le produit au panier.");
     } finally {
