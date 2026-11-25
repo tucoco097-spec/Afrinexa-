@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/admin/conversations")({
 });
 
 const DEPTS = ["commercial", "sourcing", "logistique", "douane", "finance", "support"];
-type Filter = "all" | "unread" | "active" | "archived";
+type Filter = "all" | "unread" | "active" | "archived" | "orders";
 type Conversation = {
   id: string;
   client_id: string;
@@ -54,6 +54,7 @@ type Order = {
   currency: string;
   status: string;
   created_at: string;
+  profiles?: { full_name: string | null; email: string | null } | null;
 };
 
 function initials(name: string) {
@@ -76,6 +77,7 @@ function AdminConvs() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [mobileThread, setMobileThread] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   const convs = useQuery({
     queryKey: ["admin-convs"],
@@ -88,18 +90,17 @@ function AdminConvs() {
       return (data ?? []) as Conversation[];
     },
   });
-  const clientIds = [...new Set((convs.data ?? []).map((conversation) => conversation.client_id))];
   const orderIndex = useQuery({
-    queryKey: ["admin-inbox-order-index", clientIds],
-    enabled: clientIds.length > 0,
+    queryKey: ["admin-inbox-orders"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("client_id, order_number, created_at")
-        .in("client_id", clientIds)
+        .select(
+          "client_id, id, order_number, description, total_amount, currency, status, created_at, profiles(full_name, email)",
+        )
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Order[];
     },
   });
   const orderNumbersByClient = useMemo(() => {
@@ -136,12 +137,22 @@ function AdminConvs() {
     },
   });
   const selectedId =
-    sel && convs.data?.some((item) => item.id === sel)
-      ? sel
-      : (convs.data?.find((item) => item.client_id === requestedClient && !item.archived_at)?.id ??
-        convs.data?.find((item) => item.client_id === requestedClient)?.id ??
-        convs.data?.[0]?.id);
+    filter === "orders"
+      ? undefined
+      : sel && convs.data?.some((item) => item.id === sel)
+        ? sel
+        : (convs.data?.find((item) => item.client_id === requestedClient && !item.archived_at)
+            ?.id ??
+          convs.data?.find((item) => item.client_id === requestedClient)?.id ??
+          convs.data?.[0]?.id);
   const selected = convs.data?.find((item) => item.id === selectedId);
+  const selectedOrder = orderIndex.data?.find((order) => order.id === selectedOrderId);
+  const selectedOrderConversation = selectedOrder
+    ? (convs.data?.find(
+        (conversation) =>
+          conversation.client_id === selectedOrder.client_id && !conversation.archived_at,
+      ) ?? convs.data?.find((item) => item.client_id === selectedOrder.client_id))
+    : undefined;
   const orders = useQuery({
     queryKey: ["admin-client-orders", selected?.client_id],
     enabled: !!selected?.client_id,
@@ -174,6 +185,10 @@ function AdminConvs() {
         void qc.invalidateQueries({ queryKey: ["admin-convs"] });
         void qc.invalidateQueries({ queryKey: ["admin-inbox-details"] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        void qc.invalidateQueries({ queryKey: ["admin-inbox-orders"] });
+        void qc.invalidateQueries({ queryKey: ["admin-client-orders"] });
+      })
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
@@ -183,6 +198,7 @@ function AdminConvs() {
   const visible = useMemo(() => {
     const text = query.trim().toLocaleLowerCase("fr-FR");
     return (convs.data ?? []).filter((conversation) => {
+      if (filter === "orders") return false;
       const isArchived = Boolean(conversation.archived_at);
       const unreadCount = inboxDetails.data?.unread.get(conversation.id) ?? 0;
       if (filter === "archived" && !isArchived) return false;
@@ -207,6 +223,37 @@ function AdminConvs() {
       return !text || haystack.includes(text);
     });
   }, [convs.data, filter, inboxDetails.data, orderNumbersByClient, query]);
+
+  const visibleOrders = useMemo(() => {
+    const text = query.trim().toLocaleLowerCase("fr-FR");
+    return (orderIndex.data ?? []).filter((order) => {
+      const haystack = [
+        order.order_number,
+        order.description,
+        order.status,
+        order.profiles?.full_name,
+        order.profiles?.email,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("fr-FR");
+      return !text || haystack.includes(text);
+    });
+  }, [orderIndex.data, query]);
+
+  function openOrderConversation(order: Order) {
+    const conversation =
+      convs.data?.find((item) => item.client_id === order.client_id && !item.archived_at) ??
+      convs.data?.find((item) => item.client_id === order.client_id);
+    if (!conversation) {
+      toast.info("Aucune discussion n’existe encore pour ce client.");
+      return;
+    }
+    setSelectedOrderId(null);
+    setFilter(conversation.archived_at ? "archived" : "all");
+    setSel(conversation.id);
+    setMobileThread(true);
+  }
 
   async function toggleArchive(conversation: Conversation) {
     const isArchived = Boolean(conversation.archived_at);
@@ -286,6 +333,7 @@ function AdminConvs() {
                 ["unread", "Non lues"],
                 ["active", "Récentes"],
                 ["archived", "Archivées"],
+                ["orders", "Commandes"],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -302,12 +350,64 @@ function AdminConvs() {
                     ) || ""}
                   </span>
                 )}
+                {id === "orders" && <span className="ml-1">{orderIndex.data?.length ?? ""}</span>}
               </button>
             ))}
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          {visible.length === 0 ? (
+          {filter === "orders" ? (
+            orderIndex.isLoading ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+                Chargement des commandes…
+              </p>
+            ) : orderIndex.isError ? (
+              <p role="alert" className="px-5 py-8 text-center text-sm text-destructive">
+                Impossible de charger les commandes.
+              </p>
+            ) : visibleOrders.length === 0 ? (
+              <div className="px-5 py-12 text-center">
+                <ShoppingBag className="mx-auto size-8 text-muted-foreground" />
+                <p className="mt-3 text-sm font-semibold">Aucune commande trouvée</p>
+                <p className="mt-1 text-xs text-muted-foreground">Essayez une autre recherche.</p>
+              </div>
+            ) : (
+              visibleOrders.map((order) => {
+                const clientName = order.profiles?.full_name || order.profiles?.email || "Client";
+                const hasThread = convs.data?.some(
+                  (conversation) => conversation.client_id === order.client_id,
+                );
+                return (
+                  <button
+                    key={order.id}
+                    onClick={() => {
+                      setSelectedOrderId(order.id);
+                      setMobileThread(true);
+                    }}
+                    className={`flex min-h-[82px] w-full min-w-0 items-center gap-3 border-b border-border/50 px-4 py-3 text-left transition hover:bg-secondary/60 ${selectedOrderId === order.id ? "bg-secondary/75" : ""}`}
+                  >
+                    <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gold/15 text-gold">
+                      <ShoppingBag className="size-5" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm font-semibold">{order.order_number}</span>
+                        <span className="shrink-0 text-[10px] text-muted-foreground">
+                          {fmtDateTime(order.created_at)}
+                        </span>
+                      </span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        {clientName}
+                      </span>
+                      <span className="mt-1 block truncate text-[10px] font-medium text-gold">
+                        {hasThread ? "Discussion du client disponible" : "Aucune discussion"}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })
+            )
+          ) : visible.length === 0 ? (
             <div className="px-5 py-12 text-center">
               <Inbox className="mx-auto size-8 text-muted-foreground" />
               <p className="mt-3 text-sm font-semibold">Aucune discussion ici</p>
@@ -370,7 +470,72 @@ function AdminConvs() {
       </aside>
 
       <section className={`${showInbox ? "hidden md:flex" : "flex"} min-h-0 min-w-0 flex-col`}>
-        {selected ? (
+        {filter === "orders" ? (
+          selectedOrder ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <header className="flex items-center gap-3 border-b border-border/70 bg-background/45 px-3 py-3 sm:px-5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-10 shrink-0 md:hidden"
+                  aria-label="Retour aux commandes"
+                  onClick={() => setMobileThread(false)}
+                >
+                  <ArrowLeft />
+                </Button>
+                <ShoppingBag className="size-5 shrink-0 text-gold" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{selectedOrder.order_number}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {selectedOrder.profiles?.full_name || selectedOrder.profiles?.email || "Client"}
+                  </p>
+                </div>
+                {selectedOrderConversation && (
+                  <Button
+                    type="button"
+                    variant="glass"
+                    size="sm"
+                    onClick={() => openOrderConversation(selectedOrder)}
+                  >
+                    Voir la discussion
+                  </Button>
+                )}
+              </header>
+              <div className="space-y-3 overflow-y-auto p-5">
+                <article className="rounded-2xl border border-border/70 bg-card p-4">
+                  <p className="font-semibold">
+                    {selectedOrder.description || "Commande Afrinexa"}
+                  </p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {formatMoney(
+                      Number(selectedOrder.total_amount ?? 0),
+                      selectedOrder.currency as "XAF" | "USD" | "EUR",
+                    )}
+                    {" · "}
+                    {selectedOrder.status}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Créée le {fmtDateTime(selectedOrder.created_at)}
+                  </p>
+                </article>
+                <div className="rounded-2xl bg-secondary/60 p-4 text-sm text-muted-foreground">
+                  {selectedOrderConversation
+                    ? "Cette commande est affichée avec les discussions du même client. La base ne relie pas encore chaque commande à un fil précis."
+                    : "Cette commande est visible ici, mais aucun fil n’existe pour ce client. La création automatique d’une discussion à partir d’une commande nécessite une fonction côté base de données."}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="m-auto max-w-sm px-6 text-center">
+              <ShoppingBag className="mx-auto size-10 text-gold" />
+              <p className="mt-4 font-semibold">Choisissez une commande</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Toutes les commandes sont listées ici, même si leur client n’a pas encore de fil.
+              </p>
+            </div>
+          )
+        ) : selected ? (
           <>
             <header className="flex min-w-0 items-center gap-3 border-b border-border/70 bg-background/45 px-3 py-3 sm:px-5">
               <Button
