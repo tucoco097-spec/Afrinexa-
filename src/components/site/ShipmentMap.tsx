@@ -123,7 +123,7 @@ export function ShipmentMap({
           <MapContainer center={center} zoom={3} scrollWheelZoom={false} className="size-full">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <FitBounds points={points} />
             {line.length > 1 && (
