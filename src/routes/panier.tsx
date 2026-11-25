@@ -40,15 +40,19 @@ function CartPage() {
     if (!cartId || !items.length || submitting) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.rpc("submit_cart", { _cart_id: cartId });
+      const { data: conversationId, error } = await supabase.rpc("submit_cart", {
+        _cart_id: cartId,
+      });
       if (error) throw error;
+      if (!conversationId)
+        throw new Error("La discussion associée à votre commande est introuvable.");
       await Promise.all([
         cart.refresh(),
         qc.invalidateQueries({ queryKey: ["cart-card", cartId] }),
         qc.invalidateQueries({ queryKey: ["my-convs", user?.id] }),
       ]);
       toast.success("Votre panier validé a été transmis au super administrateur.");
-      navigate({ to: "/messages" });
+      navigate({ to: "/messages", search: { conversation: conversationId } });
     } catch (error) {
       toast.error((error as Error).message || "Impossible de transmettre votre commande.");
     } finally {

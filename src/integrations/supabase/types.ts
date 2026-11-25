@@ -179,6 +179,8 @@ export type Database = {
       conversations: {
         Row: {
           assigned_to: string | null
+          archived_at: string | null
+          archived_by: string | null
           cart_id: string | null
           client_id: string
           created_at: string
@@ -189,6 +191,8 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           cart_id?: string | null
           client_id: string
           created_at?: string
@@ -199,6 +203,8 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           cart_id?: string | null
           client_id?: string
           created_at?: string

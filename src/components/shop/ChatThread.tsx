@@ -7,6 +7,7 @@ import {
   LoaderCircle,
   Mic,
   Reply,
+  Smile,
   Send,
   Square,
   X,
@@ -57,7 +58,15 @@ export function ChatThread({
   clientName?: string | null | undefined;
 }) {
   const qc = useQueryClient();
-  const [text, setText] = useState("");
+  const draftKey = `afrinexa-chat-draft:${me}:${conversationId}`;
+  const [text, setText] = useState(() => {
+    try {
+      return typeof window === "undefined" ? "" : (localStorage.getItem(draftKey) ?? "");
+    } catch {
+      return "";
+    }
+  });
+  const [showEmojis, setShowEmojis] = useState(false);
   const [reply, setReply] = useState<Msg | null>(null);
   const [uploading, setUploading] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -73,6 +82,15 @@ export function ChatThread({
   const cancelRecordingUpload = useRef(false);
   const microphonePendingRef = useRef(false);
   const voiceRequestGeneration = useRef(0);
+
+  useEffect(() => {
+    try {
+      if (text) localStorage.setItem(draftKey, text);
+      else localStorage.removeItem(draftKey);
+    } catch {
+      // Draft persistence is best-effort when browser storage is unavailable.
+    }
+  }, [draftKey, text]);
 
   const msgs = useQuery({
     queryKey: ["msgs", conversationId],
@@ -458,6 +476,40 @@ export function ChatThread({
         >
           {uploading ? <LoaderCircle className="animate-spin" /> : <FilePlus2 />}
         </Button>
+        <div className="relative shrink-0">
+          <Button
+            type="button"
+            variant="glass"
+            size="icon"
+            className="size-11"
+            aria-label="Choisir un émoji"
+            aria-expanded={showEmojis}
+            onClick={() => setShowEmojis((visible) => !visible)}
+          >
+            <Smile />
+          </Button>
+          {showEmojis && (
+            <div
+              className="absolute bottom-12 left-0 z-20 flex gap-1 rounded-2xl border border-border bg-card p-2 shadow-xl"
+              aria-label="Émojis"
+            >
+              {["🙂", "😊", "👍", "🙏", "✅", "📦", "🚚", "❤️"].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className="grid size-9 place-items-center rounded-xl text-lg hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  aria-label={`Ajouter ${emoji}`}
+                  onClick={() => {
+                    setText((current) => `${current}${emoji}`);
+                    setShowEmojis(false);
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <textarea
           aria-label="Votre message"
           value={text}
