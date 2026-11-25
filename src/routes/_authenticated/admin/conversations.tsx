@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/conversations")({
+  validateSearch: (search: Record<string, unknown>): { client?: string } =>
+    typeof search["client"] === "string" ? { client: search["client"] } : {},
   component: AdminConvs,
 });
 
@@ -44,6 +46,7 @@ type LastMessage = {
   read_at: string | null;
 };
 type Order = {
+  client_id: string;
   id: string;
   order_number: string;
   description: string | null;
@@ -67,6 +70,7 @@ function initials(name: string) {
 
 function AdminConvs() {
   const { user } = Route.useRouteContext();
+  const { client: requestedClient } = Route.useSearch();
   const qc = useQueryClient();
   const [sel, setSel] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -84,6 +88,29 @@ function AdminConvs() {
       return (data ?? []) as Conversation[];
     },
   });
+  const clientIds = [...new Set((convs.data ?? []).map((conversation) => conversation.client_id))];
+  const orderIndex = useQuery({
+    queryKey: ["admin-inbox-order-index", clientIds],
+    enabled: clientIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("client_id, order_number, created_at")
+        .in("client_id", clientIds)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const orderNumbersByClient = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const order of orderIndex.data ?? []) {
+      const numbers = map.get(order.client_id) ?? [];
+      numbers.push(order.order_number);
+      map.set(order.client_id, numbers);
+    }
+    return map;
+  }, [orderIndex.data]);
   const ids = convs.data?.map((conversation) => conversation.id) ?? [];
   const inboxDetails = useQuery({
     queryKey: ["admin-inbox-details", ids],
@@ -108,7 +135,12 @@ function AdminConvs() {
       return { lastMessage, unread };
     },
   });
-  const selectedId = sel && convs.data?.some((item) => item.id === sel) ? sel : convs.data?.[0]?.id;
+  const selectedId =
+    sel && convs.data?.some((item) => item.id === sel)
+      ? sel
+      : (convs.data?.find((item) => item.client_id === requestedClient && !item.archived_at)?.id ??
+        convs.data?.find((item) => item.client_id === requestedClient)?.id ??
+        convs.data?.[0]?.id);
   const selected = convs.data?.find((item) => item.id === selectedId);
   const orders = useQuery({
     queryKey: ["admin-client-orders", selected?.client_id],
@@ -116,13 +148,21 @@ function AdminConvs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("id, order_number, description, total_amount, currency, status, created_at")
+        .select(
+          "client_id, id, order_number, description, total_amount, currency, status, created_at",
+        )
         .eq("client_id", selected!.client_id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Order[];
     },
   });
+
+  useEffect(() => {
+    if (requestedClient && convs.data?.some((item) => item.client_id === requestedClient)) {
+      setMobileThread(true);
+    }
+  }, [convs.data, requestedClient]);
 
   useEffect(() => {
     const channel = supabase
@@ -154,13 +194,19 @@ function AdminConvs() {
       )
         return false;
       const profile = conversation.profiles;
-      const haystack = [profile?.full_name, profile?.email, profile?.phone, conversation.subject]
+      const haystack = [
+        profile?.full_name,
+        profile?.email,
+        profile?.phone,
+        conversation.subject,
+        ...(orderNumbersByClient.get(conversation.client_id) ?? []),
+      ]
         .filter(Boolean)
         .join(" ")
         .toLocaleLowerCase("fr-FR");
       return !text || haystack.includes(text);
     });
-  }, [convs.data, filter, inboxDetails.data, query]);
+  }, [convs.data, filter, inboxDetails.data, orderNumbersByClient, query]);
 
   async function toggleArchive(conversation: Conversation) {
     const isArchived = Boolean(conversation.archived_at);
@@ -225,8 +271,8 @@ function AdminConvs() {
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Rechercher un client…"
-              aria-label="Rechercher un client"
+              placeholder="Rechercher un client ou n° de commande…"
+              aria-label="Rechercher un client ou un numéro de commande"
               className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </label>
@@ -275,6 +321,7 @@ function AdminConvs() {
               const name = profile?.full_name || profile?.email || "Client";
               const latest = inboxDetails.data?.lastMessage.get(conversation.id);
               const unread = inboxDetails.data?.unread.get(conversation.id) ?? 0;
+              const clientOrders = orderNumbersByClient.get(conversation.client_id) ?? [];
               return (
                 <button
                   key={conversation.id}
@@ -308,6 +355,12 @@ function AdminConvs() {
                         </span>
                       )}
                     </span>
+                    {clientOrders.length > 0 && (
+                      <span className="mt-1 block truncate text-[10px] font-medium text-gold">
+                        Commandes du client : {clientOrders.slice(0, 2).join(" · ")}
+                        {clientOrders.length > 2 ? " · …" : ""}
+                      </span>
+                    )}
                   </span>
                 </button>
               );
@@ -418,6 +471,40 @@ function AdminConvs() {
                   </div>
                 )}
               </aside>
+              <details className="max-h-[32dvh] shrink-0 overflow-y-auto border-t border-border/70 bg-background/45 px-4 lg:hidden">
+                <summary className="cursor-pointer py-3 text-sm font-semibold">
+                  Commandes du client ({orders.data?.length ?? 0})
+                </summary>
+                {orders.isLoading ? (
+                  <p className="pb-3 text-xs text-muted-foreground">Chargement…</p>
+                ) : orders.isError ? (
+                  <p className="pb-3 text-xs text-destructive">Commandes indisponibles.</p>
+                ) : orders.data?.length ? (
+                  <div className="space-y-2 pb-3">
+                    {orders.data.map((order) => (
+                      <article
+                        key={order.id}
+                        className="rounded-xl border border-border/70 bg-card p-3"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs font-bold">{order.order_number}</span>
+                          <span className="text-xs font-semibold">
+                            {formatMoney(
+                              Number(order.total_amount ?? 0),
+                              order.currency as "XAF" | "USD" | "EUR",
+                            )}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {order.description || "Commande Afrinexa"} · {order.status}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="pb-3 text-xs text-muted-foreground">Aucune commande enregistrée.</p>
+                )}
+              </details>
             </div>
           </>
         ) : (

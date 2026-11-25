@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, Truck } from "lucide-react";
+import { MessageCircle, Plus, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,20 @@ function Orders() {
           .select("*, profiles(full_name, email), shipments(id)")
           .order("created_at", { ascending: false })
       ).data ?? [],
+  });
+  const orderClientIds = [...new Set((orders.data ?? []).map((order) => order.client_id))];
+  const clientConversations = useQuery({
+    queryKey: ["admin-order-conversations", orderClientIds],
+    enabled: orderClientIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("id, client_id, archived_at")
+        .in("client_id", orderClientIds)
+        .order("last_message_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
 
   async function createOrder(e: React.FormEvent<HTMLFormElement>) {
@@ -138,6 +152,23 @@ function Orders() {
               <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">
                 {o.shipments?.length ?? 0} expédition(s)
               </span>
+              <Button
+                size="sm"
+                variant="glass"
+                disabled={
+                  clientConversations.isLoading ||
+                  !clientConversations.data?.some(
+                    (conversation) =>
+                      conversation.client_id === o.client_id && !conversation.archived_at,
+                  )
+                }
+                onClick={() =>
+                  navigate({ to: "/admin/conversations", search: { client: o.client_id } })
+                }
+                title="Ouvrir la discussion active du client"
+              >
+                <MessageCircle /> Voir la discussion
+              </Button>
               <Button size="sm" variant="gold" onClick={() => setShipFor(o)}>
                 <Truck /> Créer une expédition
               </Button>
