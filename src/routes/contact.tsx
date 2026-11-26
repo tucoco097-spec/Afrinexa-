@@ -56,18 +56,28 @@ function Page() {
         )}
         {rows.map((r, k) => (
           <Reveal key={r.l} delay={k * 0.05}>
-            <a
-              href={r.href}
-              target={r.href?.startsWith("http") ? "_blank" : undefined}
-              rel="noreferrer"
-              className="glass flex h-full items-start gap-4 rounded-3xl p-6 transition hover:shadow-glow"
-            >
-              <r.i className="size-6 shrink-0 text-accent" />
-              <div>
-                <p className="text-xs text-muted-foreground">{r.l}</p>
-                <p className="mt-1 font-semibold">{r.v}</p>
+            {r.href ? (
+              <a
+                href={r.href}
+                target={r.href.startsWith("http") ? "_blank" : undefined}
+                rel="noreferrer"
+                className="glass flex h-full items-start gap-4 rounded-3xl p-6 transition hover:shadow-glow"
+              >
+                <r.i className="size-6 shrink-0 text-accent" />
+                <div>
+                  <p className="text-xs text-muted-foreground">{r.l}</p>
+                  <p className="mt-1 font-semibold">{r.v}</p>
+                </div>
+              </a>
+            ) : (
+              <div className="glass flex h-full items-start gap-4 rounded-3xl p-6">
+                <r.i className="size-6 shrink-0 text-accent" />
+                <div>
+                  <p className="text-xs text-muted-foreground">{r.l}</p>
+                  <p className="mt-1 font-semibold">{r.v}</p>
+                </div>
               </div>
-            </a>
+            )}
           </Reveal>
         ))}
       </div>

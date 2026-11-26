@@ -259,7 +259,7 @@ function Messages() {
                 )}
               </header>
               <div className="min-h-0 min-w-0 flex-1">
-                <ChatThread conversationId={selected.id} me={user.id} />
+                <ChatThread key={selected.id} conversationId={selected.id} me={user.id} />
               </div>
             </>
           ) : (

@@ -29,8 +29,10 @@ import { Route as BoutiqueSlugRouteImport } from './routes/boutique/$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminCommandesRouteImport } from './routes/_authenticated/admin/commandes'
 import { Route as AuthenticatedAdminConversationsRouteImport } from './routes/_authenticated/admin/conversations'
+import { Route as AuthenticatedAdminExpeditionsRouteImport } from './routes/_authenticated/admin/expeditions'
 import { Route as AuthenticatedAdminParametresRouteImport } from './routes/_authenticated/admin/parametres'
 import { Route as AuthenticatedAdminProduitsRouteImport } from './routes/_authenticated/admin/produits'
+import { Route as AuthenticatedAdminExpeditionsIndexRouteImport } from './routes/_authenticated/admin/expeditions.index'
 import { Route as AuthenticatedAdminExpeditionsIdRouteImport } from './routes/_authenticated/admin/expeditions.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -134,6 +136,12 @@ const AuthenticatedAdminConversationsRoute =
     path: '/conversations',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminExpeditionsRoute =
+  AuthenticatedAdminExpeditionsRouteImport.update({
+    id: '/expeditions',
+    path: '/expeditions',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminParametresRoute =
   AuthenticatedAdminParametresRouteImport.update({
     id: '/parametres',
@@ -146,11 +154,17 @@ const AuthenticatedAdminProduitsRoute =
     path: '/produits',
     getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
+const AuthenticatedAdminExpeditionsIndexRoute =
+  AuthenticatedAdminExpeditionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminExpeditionsRoute,
+  } as any)
 const AuthenticatedAdminExpeditionsIdRoute =
   AuthenticatedAdminExpeditionsIdRouteImport.update({
-    id: '/expeditions/$id',
-    path: '/expeditions/$id',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminExpeditionsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -172,10 +186,12 @@ export interface FileRoutesByFullPath {
   '/boutique/': typeof BoutiqueIndexRoute
   '/admin/commandes': typeof AuthenticatedAdminCommandesRoute
   '/admin/conversations': typeof AuthenticatedAdminConversationsRoute
+  '/admin/expeditions': typeof AuthenticatedAdminExpeditionsRouteWithChildren
   '/admin/parametres': typeof AuthenticatedAdminParametresRoute
   '/admin/produits': typeof AuthenticatedAdminProduitsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/expeditions/$id': typeof AuthenticatedAdminExpeditionsIdRoute
+  '/admin/expeditions/': typeof AuthenticatedAdminExpeditionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -199,6 +215,7 @@ export interface FileRoutesByTo {
   '/admin/produits': typeof AuthenticatedAdminProduitsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/expeditions/$id': typeof AuthenticatedAdminExpeditionsIdRoute
+  '/admin/expeditions': typeof AuthenticatedAdminExpeditionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -221,10 +238,12 @@ export interface FileRoutesById {
   '/boutique/': typeof BoutiqueIndexRoute
   '/_authenticated/admin/commandes': typeof AuthenticatedAdminCommandesRoute
   '/_authenticated/admin/conversations': typeof AuthenticatedAdminConversationsRoute
+  '/_authenticated/admin/expeditions': typeof AuthenticatedAdminExpeditionsRouteWithChildren
   '/_authenticated/admin/parametres': typeof AuthenticatedAdminParametresRoute
   '/_authenticated/admin/produits': typeof AuthenticatedAdminProduitsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/expeditions/$id': typeof AuthenticatedAdminExpeditionsIdRoute
+  '/_authenticated/admin/expeditions/': typeof AuthenticatedAdminExpeditionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -247,10 +266,12 @@ export interface FileRouteTypes {
     | '/boutique/'
     | '/admin/commandes'
     | '/admin/conversations'
+    | '/admin/expeditions'
     | '/admin/parametres'
     | '/admin/produits'
     | '/admin/'
     | '/admin/expeditions/$id'
+    | '/admin/expeditions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -274,6 +295,7 @@ export interface FileRouteTypes {
     | '/admin/produits'
     | '/admin'
     | '/admin/expeditions/$id'
+    | '/admin/expeditions'
   id:
     | '__root__'
     | '/'
@@ -295,10 +317,12 @@ export interface FileRouteTypes {
     | '/boutique/'
     | '/_authenticated/admin/commandes'
     | '/_authenticated/admin/conversations'
+    | '/_authenticated/admin/expeditions'
     | '/_authenticated/admin/parametres'
     | '/_authenticated/admin/produits'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/expeditions/$id'
+    | '/_authenticated/admin/expeditions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -460,6 +484,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminConversationsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/expeditions': {
+      id: '/_authenticated/admin/expeditions'
+      path: '/expeditions'
+      fullPath: '/admin/expeditions'
+      preLoaderRoute: typeof AuthenticatedAdminExpeditionsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/parametres': {
       id: '/_authenticated/admin/parametres'
       path: '/parametres'
@@ -474,33 +505,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminProduitsRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/expeditions/': {
+      id: '/_authenticated/admin/expeditions/'
+      path: '/'
+      fullPath: '/admin/expeditions/'
+      preLoaderRoute: typeof AuthenticatedAdminExpeditionsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminExpeditionsRoute
+    }
     '/_authenticated/admin/expeditions/$id': {
       id: '/_authenticated/admin/expeditions/$id'
-      path: '/expeditions/$id'
+      path: '/$id'
       fullPath: '/admin/expeditions/$id'
       preLoaderRoute: typeof AuthenticatedAdminExpeditionsIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
+      parentRoute: typeof AuthenticatedAdminExpeditionsRoute
     }
   }
 }
 
+interface AuthenticatedAdminExpeditionsRouteChildren {
+  AuthenticatedAdminExpeditionsIdRoute: typeof AuthenticatedAdminExpeditionsIdRoute
+  AuthenticatedAdminExpeditionsIndexRoute: typeof AuthenticatedAdminExpeditionsIndexRoute
+}
+
+const AuthenticatedAdminExpeditionsRouteChildren: AuthenticatedAdminExpeditionsRouteChildren =
+  {
+    AuthenticatedAdminExpeditionsIdRoute: AuthenticatedAdminExpeditionsIdRoute,
+    AuthenticatedAdminExpeditionsIndexRoute:
+      AuthenticatedAdminExpeditionsIndexRoute,
+  }
+
+const AuthenticatedAdminExpeditionsRouteWithChildren =
+  AuthenticatedAdminExpeditionsRoute._addFileChildren(
+    AuthenticatedAdminExpeditionsRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminCommandesRoute: typeof AuthenticatedAdminCommandesRoute
   AuthenticatedAdminConversationsRoute: typeof AuthenticatedAdminConversationsRoute
+  AuthenticatedAdminExpeditionsRoute: typeof AuthenticatedAdminExpeditionsRouteWithChildren
   AuthenticatedAdminParametresRoute: typeof AuthenticatedAdminParametresRoute
   AuthenticatedAdminProduitsRoute: typeof AuthenticatedAdminProduitsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
-  AuthenticatedAdminExpeditionsIdRoute: typeof AuthenticatedAdminExpeditionsIdRoute
 }
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
     AuthenticatedAdminCommandesRoute: AuthenticatedAdminCommandesRoute,
     AuthenticatedAdminConversationsRoute: AuthenticatedAdminConversationsRoute,
+    AuthenticatedAdminExpeditionsRoute:
+      AuthenticatedAdminExpeditionsRouteWithChildren,
     AuthenticatedAdminParametresRoute: AuthenticatedAdminParametresRoute,
     AuthenticatedAdminProduitsRoute: AuthenticatedAdminProduitsRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
-    AuthenticatedAdminExpeditionsIdRoute: AuthenticatedAdminExpeditionsIdRoute,
   }
 
 const AuthenticatedAdminRouteRouteWithChildren =

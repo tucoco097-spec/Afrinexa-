@@ -98,11 +98,18 @@ function Dashboard() {
           </p>
           <h2 className="mt-2 text-2xl font-bold">Activité</h2>
         </div>
-        <Button asChild variant="hero">
-          <Link to="/admin/produits">
-            <Package aria-hidden="true" /> Gérer les produits
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="glass">
+            <Link to="/admin/expeditions">
+              <Truck aria-hidden="true" /> Gérer les expéditions
+            </Link>
+          </Button>
+          <Button asChild variant="hero">
+            <Link to="/admin/produits">
+              <Package aria-hidden="true" /> Gérer les produits
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {metricError && (

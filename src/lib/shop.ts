@@ -123,18 +123,20 @@ export function useCart(userId?: string) {
     queryKey: ["cart", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data: cart } = await supabase
+      const { data: cart, error: cartError } = await supabase
         .from("carts")
         .select("id")
         .eq("user_id", userId!)
         .eq("status", "open")
         .maybeSingle();
+      if (cartError) throw cartError;
       if (!cart) return { cartId: null as string | null, items: [] as CartItem[] };
-      const { data } = await supabase
+      const { data, error: itemsError } = await supabase
         .from("cart_items")
         .select("*, products(slug)")
         .eq("cart_id", cart.id)
         .order("created_at");
+      if (itemsError) throw itemsError;
       return { cartId: cart.id as string | null, items: (data ?? []) as CartItem[] };
     },
   });

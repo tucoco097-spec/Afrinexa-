@@ -54,12 +54,16 @@ function Shop() {
   const [q, setQ] = useState(s.q ?? "");
 
   useEffect(() => {
+    setQ(s.q ?? "");
+  }, [s.q]);
+
+  useEffect(() => {
     const t = setTimeout(() => {
       if ((s.q ?? "") !== q)
         navigate({ search: (p) => ({ ...p, q: q || undefined, page: undefined }) });
     }, 300);
     return () => clearTimeout(t);
-  }, [q]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [navigate, q, s.q]);
 
   const cats = useQuery(categoriesQuery);
   const page = s.page ?? 1;

@@ -17,6 +17,7 @@
     { "path": "/messages", "title": "Messagerie" },
     { "path": "/admin", "title": "Administration" },
     { "path": "/admin/commandes", "title": "Commandes — administration" },
+    { "path": "/admin/expeditions", "title": "Expéditions — administration" },
     { "path": "/admin/conversations", "title": "Conversations — administration" },
     { "path": "/admin/expeditions/:id", "title": "Expédition — administration" },
     { "path": "/admin/parametres", "title": "Paramètres — administration" },

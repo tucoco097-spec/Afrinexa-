@@ -36,6 +36,7 @@ function AdminProducts() {
   });
   const [edit, setEdit] = useState<Partial<Product> | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -47,17 +48,28 @@ function AdminProducts() {
   }
 
   async function upload(files: FileList | null) {
-    if (!files) return;
-    for (const file of Array.from(files)) {
-      const path = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-      const { error } = await supabase.storage.from("products").upload(path, file);
-      if (error) toast.error("L’image n’a pas pu être téléversée.");
-      else setImages((current) => [...current, path]);
+    if (!files?.length || uploading) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const path = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+        const { error } = await supabase.storage.from("products").upload(path, file);
+        if (error) toast.error("L’image n’a pas pu être téléversée.");
+        else setImages((current) => [...current, path]);
+      }
+    } catch {
+      toast.error("L’image n’a pas pu être téléversée.");
+    } finally {
+      setUploading(false);
     }
   }
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (uploading) {
+      toast.info("Attendez la fin du téléversement des photos avant d’enregistrer.");
+      return;
+    }
     const form = new FormData(event.currentTarget);
     const value = (key: string) => String(form.get(key) ?? "").trim();
     const numberOrNull = (key: string) => (value(key) ? Number(value(key)) : null);
@@ -503,9 +515,15 @@ function AdminProducts() {
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
-                onChange={(event) => void upload(event.target.files)}
+                onChange={(event) => void upload(event.currentTarget.files)}
+                disabled={uploading}
                 className="mt-2"
               />
+              {uploading && (
+                <p role="status" className="mt-2 text-xs text-muted-foreground">
+                  Téléversement des photos…
+                </p>
+              )}
             </div>
             <label className="col-span-2 flex items-center gap-2 text-sm">
               <input
@@ -515,8 +533,8 @@ function AdminProducts() {
               />
               Visible dans la boutique
             </label>
-            <Button type="submit" variant="hero" className="col-span-2">
-              Enregistrer
+            <Button type="submit" variant="hero" className="col-span-2" disabled={uploading}>
+              {uploading ? "Téléversement…" : "Enregistrer"}
             </Button>
           </form>
         </DialogContent>

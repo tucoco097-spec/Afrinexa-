@@ -94,14 +94,15 @@ export function ChatThread({
 
   const msgs = useQuery({
     queryKey: ["msgs", conversationId],
-    queryFn: async () =>
-      ((
-        await supabase
-          .from("messages")
-          .select("*")
-          .eq("conversation_id", conversationId)
-          .order("created_at")
-      ).data ?? []) as Msg[],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at");
+      if (error) throw error;
+      return (data ?? []) as Msg[];
+    },
   });
 
   useEffect(() => {
@@ -363,9 +364,20 @@ export function ChatThread({
           <p className="text-center text-sm text-muted-foreground">Chargement des messages…</p>
         )}
         {msgs.isError && (
-          <p role="alert" className="text-center text-sm text-destructive">
-            Impossible de charger cette conversation. Réessayez plus tard.
-          </p>
+          <div role="alert" className="flex flex-col items-center gap-2 text-center">
+            <p className="text-sm text-destructive">
+              Impossible de charger cette conversation. Vos messages ne sont pas supprimés.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="glass"
+              onClick={() => void msgs.refetch()}
+              disabled={msgs.isFetching}
+            >
+              {msgs.isFetching ? "Nouvel essai…" : "Réessayer"}
+            </Button>
+          </div>
         )}
         {msgs.data?.map((m) => {
           const day = new Date(m.created_at).toLocaleDateString("fr-FR", {

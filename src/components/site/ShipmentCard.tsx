@@ -19,15 +19,30 @@ export type ShipmentRow = {
 export function ShipmentCard({ s, adminLink }: { s: ShipmentRow; adminLink?: boolean }) {
   const Icon = s.mode === "air" ? Plane : Ship;
   const pct = progressFor(s.mode as Mode, s.status);
+
+  async function copyTrackingCode() {
+    if (!s.tracking_code) return;
+    try {
+      await navigator.clipboard.writeText(s.tracking_code);
+      toast.success("Code copié");
+    } catch {
+      toast.error("Impossible de copier le code de suivi sur cet appareil.");
+    }
+  }
+
   return (
     <div className="glass rounded-3xl p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(s.tracking_code ?? "");
-              toast.success("Code copié");
-            }}
+            type="button"
+            onClick={() => void copyTrackingCode()}
+            disabled={!s.tracking_code}
+            aria-label={
+              s.tracking_code
+                ? `Copier le code de suivi ${s.tracking_code}`
+                : "Aucun code de suivi disponible"
+            }
             className="flex items-center gap-2 font-display text-lg font-bold"
           >
             {s.tracking_code} <Copy className="size-3.5 text-muted-foreground" />

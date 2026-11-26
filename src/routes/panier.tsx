@@ -95,6 +95,26 @@ function CartPage() {
       </p>
       <div className="mt-6 space-y-3">
         {cart.isLoading && <Skeleton className="h-28 rounded-3xl" />}
+        {cart.isError && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4"
+          >
+            <p className="text-sm text-destructive">
+              Impossible de charger votre panier. Vos articles ne sont pas considérés comme
+              supprimés.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="glass"
+              onClick={() => void cart.refetch()}
+              disabled={cart.isFetching}
+            >
+              {cart.isFetching ? "Nouvel essai…" : "Réessayer"}
+            </Button>
+          </div>
+        )}
         {cart.data && items.length === 0 && (
           <div className="glass rounded-3xl p-10 text-center">
             <p className="font-semibold">Votre panier est vide</p>
@@ -128,17 +148,19 @@ function CartPage() {
               <div className="mt-2 flex items-center justify-between gap-2">
                 <div className="flex items-center rounded-full bg-secondary">
                   <button
+                    type="button"
                     className="p-2"
                     onClick={() => setQty(i.id, i.quantity - 1)}
-                    aria-label="Moins"
+                    aria-label={`Diminuer la quantité de ${i.name}`}
                   >
                     <Minus className="size-3.5" />
                   </button>
                   <span className="w-8 text-center text-sm">{i.quantity}</span>
                   <button
+                    type="button"
                     className="p-2"
                     onClick={() => setQty(i.id, i.quantity + 1)}
-                    aria-label="Plus"
+                    aria-label={`Augmenter la quantité de ${i.name}`}
                   >
                     <Plus className="size-3.5" />
                   </button>
@@ -147,8 +169,9 @@ function CartPage() {
                   {formatMoney(Number(i.unit_price) * i.quantity, i.currency)}
                 </p>
                 <button
+                  type="button"
                   onClick={() => setQty(i.id, 0)}
-                  aria-label="Supprimer"
+                  aria-label={`Supprimer ${i.name} du panier`}
                   className="text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 className="size-4" />

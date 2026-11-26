@@ -28,30 +28,39 @@ function Espace() {
   const navigate = useNavigate();
   const profile = useQuery({
     queryKey: ["me", user.id],
-    queryFn: async () =>
-      (await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()).data,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
   });
   const orders = useQuery({
     queryKey: ["my-orders", user.id],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("orders")
-          .select("*")
-          .eq("client_id", user.id)
-          .order("created_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("client_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
   const ships = useQuery({
     queryKey: ["my-ships", user.id],
-    queryFn: async () =>
-      ((
-        await supabase
-          .from("shipments")
-          .select("*, orders(order_number)")
-          .eq("client_id", user.id)
-          .order("created_at", { ascending: false })
-      ).data ?? []) as ShipmentRow[],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("shipments")
+        .select("*, orders(order_number)")
+        .eq("client_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ShipmentRow[];
+    },
   });
   const favorites = useQuery({
     queryKey: ["my-favorites", user.id],
@@ -99,12 +108,47 @@ function Espace() {
         </Button>
       </div>
 
+      {profile.isError && (
+        <div
+          role="alert"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4"
+        >
+          <p className="text-sm text-destructive">Impossible de charger votre profil.</p>
+          <Button
+            type="button"
+            size="sm"
+            variant="glass"
+            onClick={() => void profile.refetch()}
+            disabled={profile.isFetching}
+          >
+            {profile.isFetching ? "Nouvel essai…" : "Réessayer"}
+          </Button>
+        </div>
+      )}
+
       <AccountSettings user={user} profile={profile.data} />
 
       <h2 className="mt-10 text-xl font-bold">Mes expéditions</h2>
       <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {ships.isLoading && [1, 2, 3].map((k) => <Skeleton key={k} className="h-48 rounded-3xl" />)}
-        {ships.data?.length === 0 && (
+        {ships.isError && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 md:col-span-2 lg:col-span-3"
+          >
+            <p className="text-sm text-destructive">Impossible de charger vos expéditions.</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="glass"
+              onClick={() => void ships.refetch()}
+              disabled={ships.isFetching}
+            >
+              {ships.isFetching ? "Nouvel essai…" : "Réessayer"}
+            </Button>
+          </div>
+        )}
+        {ships.isSuccess && ships.data.length === 0 && (
           <p className="text-sm text-muted-foreground">Aucune expédition pour le moment.</p>
         )}
         {ships.data?.map((s) => (
@@ -116,7 +160,24 @@ function Espace() {
         <Heart className="size-5 text-gold" /> Mes favoris
       </h2>
       {favorites.isLoading && <Skeleton className="mt-4 h-24 rounded-3xl" />}
-      {favorites.data?.length === 0 && (
+      {favorites.isError && (
+        <div
+          role="alert"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4"
+        >
+          <p className="text-sm text-destructive">Impossible de charger vos favoris.</p>
+          <Button
+            type="button"
+            size="sm"
+            variant="glass"
+            onClick={() => void favorites.refetch()}
+            disabled={favorites.isFetching}
+          >
+            {favorites.isFetching ? "Nouvel essai…" : "Réessayer"}
+          </Button>
+        </div>
+      )}
+      {favorites.isSuccess && favorites.data.length === 0 && (
         <p className="mt-3 text-sm text-muted-foreground">Aucun favori pour le moment.</p>
       )}
       {!!favorites.data?.length && (
@@ -163,7 +224,35 @@ function Espace() {
             </tr>
           </thead>
           <tbody>
-            {orders.data?.length === 0 && (
+            {orders.isLoading && (
+              <tr>
+                <td colSpan={5} className="p-4 text-muted-foreground">
+                  Chargement de vos commandes…
+                </td>
+              </tr>
+            )}
+            {orders.isError && (
+              <tr>
+                <td colSpan={5}>
+                  <div
+                    role="alert"
+                    className="flex flex-wrap items-center justify-between gap-3 p-4"
+                  >
+                    <p className="text-sm text-destructive">Impossible de charger vos commandes.</p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="glass"
+                      onClick={() => void orders.refetch()}
+                      disabled={orders.isFetching}
+                    >
+                      {orders.isFetching ? "Nouvel essai…" : "Réessayer"}
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            )}
+            {orders.isSuccess && orders.data.length === 0 && (
               <tr>
                 <td colSpan={5} className="p-4 text-muted-foreground">
                   Aucune commande.

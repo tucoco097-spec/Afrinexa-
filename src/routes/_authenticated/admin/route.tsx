@@ -1,5 +1,12 @@
 import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
-import { ClipboardList, LayoutDashboard, MessageSquare, Package, Settings } from "lucide-react";
+import {
+  ClipboardList,
+  LayoutDashboard,
+  MessageSquare,
+  Package,
+  Settings,
+  Truck,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isStaff } from "@/lib/site";
 
@@ -28,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const TABS = [
   { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { to: "/admin/commandes", label: "Commandes", icon: ClipboardList, exact: false },
+  { to: "/admin/expeditions", label: "Expéditions", icon: Truck, exact: false },
   { to: "/admin/produits", label: "Produits", icon: Package, exact: false },
   { to: "/admin/conversations", label: "Messagerie", icon: MessageSquare, exact: false },
   { to: "/admin/parametres", label: "Paramètres", icon: Settings, exact: false },

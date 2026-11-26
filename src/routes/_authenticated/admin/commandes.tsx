@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { fmtDate } from "@/lib/site";
+import { statusesFor, type Mode } from "@/lib/statuses";
 
 export const Route = createFileRoute("/_authenticated/admin/commandes")({ component: Orders });
 
@@ -21,25 +22,30 @@ function Orders() {
   const navigate = useNavigate();
   const [newOpen, setNewOpen] = useState(false);
   const [shipFor, setShipFor] = useState<{ id: string; order_number: string } | null>(null);
+  const [shipmentMode, setShipmentMode] = useState<Mode>("air");
   const clients = useQuery({
     queryKey: ["clients"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("profiles")
-          .select("id, full_name, email, phone")
-          .order("created_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    retry: false,
   });
   const orders = useQuery({
     queryKey: ["admin-orders"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("orders")
-          .select("*, profiles(full_name, email), shipments(id)")
-          .order("created_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, profiles(full_name, email), shipments(id)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    retry: false,
   });
   const orderClientIds = [...new Set((orders.data ?? []).map((order) => order.client_id))];
   const clientConversations = useQuery({
@@ -54,6 +60,7 @@ function Orders() {
       if (error) throw error;
       return data ?? [];
     },
+    retry: false,
   });
 
   async function createOrder(e: React.FormEvent<HTMLFormElement>) {
@@ -85,15 +92,26 @@ function Orders() {
     if (!shipFor) return;
     const f = new FormData(e.currentTarget);
     const v = (k: string) => String(f.get(k) ?? "").trim() || null;
-    const mode = String(f.get("mode")) as "air" | "sea";
+    const mode = String(f.get("mode")) as Mode;
+    const origin = v("origin");
+    const destination = v("destination");
+    const status = String(f.get("status") ?? "");
+    if (!origin || !destination) {
+      toast.error("Renseignez le départ et la destination confirmés.");
+      return;
+    }
+    if (!statusesFor(mode).includes(status)) {
+      toast.error("Choisissez un statut confirmé pour ce mode de transport.");
+      return;
+    }
     const { data, error } = await supabase
       .from("shipments")
       .insert({
         order_id: shipFor.id,
         client_id: user.id /* replaced server-side by the order's client */,
         mode,
-        origin: v("origin") ?? "Guangzhou, Chine",
-        destination: v("destination") ?? "Douala, Cameroun",
+        origin,
+        destination,
         carrier: v("carrier"),
         awb: v("awb"),
         bl: v("bl"),
@@ -103,7 +121,7 @@ function Orders() {
         weight_kg: v("weight") ? Number(v("weight")) : null,
         volume_cbm: v("cbm") ? Number(v("cbm")) : null,
         packages: v("packages") ? Number(v("packages")) : null,
-        status: mode === "air" ? "Colis annoncé" : "Colis reçu en Chine",
+        status,
       })
       .select("id, tracking_code")
       .single();
@@ -111,12 +129,24 @@ function Orders() {
       toast.error(error.message);
       return;
     }
-    await supabase.from("shipment_events").insert({
+    const { error: eventError } = await supabase.from("shipment_events").insert({
       shipment_id: data.id,
-      status: mode === "air" ? "Colis annoncé" : "Colis reçu en Chine",
+      status,
       public_note: "Expédition créée.",
     });
-    toast.success(`Code de suivi généré : ${data.tracking_code}`);
+    if (eventError) {
+      toast.error(
+        "Expédition créée, mais son étape initiale n’a pas été enregistrée. Vérifiez la fiche avant de communiquer le suivi.",
+      );
+    } else {
+      toast.success(`Code de suivi généré : ${data.tracking_code ?? "créé"}`);
+    }
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["admin-orders"] }),
+      qc.invalidateQueries({ queryKey: ["admin-ships"] }),
+      qc.invalidateQueries({ queryKey: ["admin-expeditions"] }),
+      qc.invalidateQueries({ queryKey: ["admin-count"] }),
+    ]);
     setShipFor(null);
     navigate({ to: "/admin/expeditions/$id", params: { id: data.id } });
   }
@@ -130,51 +160,98 @@ function Orders() {
         </Button>
       </div>
       <div className="mt-4 space-y-3">
-        {orders.data?.length === 0 && (
+        {orders.isLoading && (
+          <p className="text-sm text-muted-foreground">Chargement des commandes…</p>
+        )}
+        {orders.isError && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4"
+          >
+            <p className="text-sm text-destructive">Impossible de charger les commandes.</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="glass"
+              onClick={() => void orders.refetch()}
+              disabled={orders.isFetching}
+            >
+              {orders.isFetching ? "Nouvel essai…" : "Réessayer"}
+            </Button>
+          </div>
+        )}
+        {clientConversations.isError && (
+          <div
+            role="alert"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-4"
+          >
+            <p className="text-sm text-destructive">
+              Impossible de vérifier les discussions des clients.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="glass"
+              onClick={() => void clientConversations.refetch()}
+              disabled={clientConversations.isFetching}
+            >
+              {clientConversations.isFetching ? "Nouvel essai…" : "Réessayer"}
+            </Button>
+          </div>
+        )}
+        {orders.isSuccess && orders.data.length === 0 && (
           <p className="text-sm text-muted-foreground">Aucune commande.</p>
         )}
-        {orders.data?.map((o) => (
-          <div
-            key={o.id}
-            className="glass flex flex-wrap items-center justify-between gap-3 rounded-3xl p-5"
-          >
-            <div>
-              <p className="font-display font-bold">{o.order_number}</p>
-              <p className="text-sm text-muted-foreground">
-                {o.profiles?.full_name || o.profiles?.email} · {fmtDate(o.created_at)}
-              </p>
-              {o.description && <p className="mt-1 text-sm">{o.description}</p>}
+        {orders.isSuccess &&
+          orders.data.map((o) => (
+            <div
+              key={o.id}
+              className="glass flex flex-wrap items-center justify-between gap-3 rounded-3xl p-5"
+            >
+              <div>
+                <p className="font-display font-bold">{o.order_number}</p>
+                <p className="text-sm text-muted-foreground">
+                  {o.profiles?.full_name || o.profiles?.email} · {fmtDate(o.created_at)}
+                </p>
+                {o.description && <p className="mt-1 text-sm">{o.description}</p>}
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm">
+                  {Number(o.total_amount).toLocaleString("fr-FR")} {o.currency}
+                </span>
+                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">
+                  {o.shipments?.length ?? 0} expédition(s)
+                </span>
+                <Button
+                  size="sm"
+                  variant="glass"
+                  disabled={
+                    clientConversations.isLoading ||
+                    !clientConversations.data?.some(
+                      (conversation) =>
+                        conversation.client_id === o.client_id && !conversation.archived_at,
+                    )
+                  }
+                  onClick={() =>
+                    navigate({ to: "/admin/conversations", search: { client: o.client_id } })
+                  }
+                  title="Ouvrir la discussion active du client"
+                >
+                  <MessageCircle /> Voir la discussion
+                </Button>
+                <Button
+                  size="sm"
+                  variant="gold"
+                  onClick={() => {
+                    setShipmentMode("air");
+                    setShipFor(o);
+                  }}
+                >
+                  <Truck /> Créer une expédition
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm">
-                {Number(o.total_amount).toLocaleString("fr-FR")} {o.currency}
-              </span>
-              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs">
-                {o.shipments?.length ?? 0} expédition(s)
-              </span>
-              <Button
-                size="sm"
-                variant="glass"
-                disabled={
-                  clientConversations.isLoading ||
-                  !clientConversations.data?.some(
-                    (conversation) =>
-                      conversation.client_id === o.client_id && !conversation.archived_at,
-                  )
-                }
-                onClick={() =>
-                  navigate({ to: "/admin/conversations", search: { client: o.client_id } })
-                }
-                title="Ouvrir la discussion active du client"
-              >
-                <MessageCircle /> Voir la discussion
-              </Button>
-              <Button size="sm" variant="gold" onClick={() => setShipFor(o)}>
-                <Truck /> Créer une expédition
-              </Button>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
 
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
@@ -198,6 +275,23 @@ function Orders() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Le client doit d'abord avoir créé son compte.
               </p>
+              {clients.isError && (
+                <div
+                  role="alert"
+                  className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm text-destructive"
+                >
+                  <span>Les clients ne peuvent pas être chargés.</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="glass"
+                    onClick={() => void clients.refetch()}
+                    disabled={clients.isFetching}
+                  >
+                    {clients.isFetching ? "Nouvel essai…" : "Réessayer"}
+                  </Button>
+                </div>
+              )}
             </div>
             <div>
               <Label>Articles / description</Label>
@@ -232,18 +326,40 @@ function Orders() {
           <form onSubmit={createShipment} className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <Label>Mode</Label>
-              <select name="mode" className={sel}>
+              <select
+                name="mode"
+                className={sel}
+                value={shipmentMode}
+                onChange={(event) => setShipmentMode(event.target.value as Mode)}
+                required
+              >
                 <option value="air">Aérien</option>
                 <option value="sea">Maritime</option>
               </select>
             </div>
+            <div className="col-span-2">
+              <Label>Statut initial confirmé</Label>
+              <select key={shipmentMode} name="status" className={sel} defaultValue="" required>
+                <option value="" disabled>
+                  Choisir un statut observé…
+                </option>
+                {statusesFor(shipmentMode).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Sélectionnez uniquement une étape réellement confirmée.
+              </p>
+            </div>
             <div>
               <Label>Départ</Label>
-              <Input name="origin" placeholder="Guangzhou, Chine" />
+              <Input name="origin" placeholder="Lieu de départ confirmé" required />
             </div>
             <div>
               <Label>Destination</Label>
-              <Input name="destination" placeholder="Douala, Cameroun" />
+              <Input name="destination" placeholder="Destination confirmée" required />
             </div>
             <div>
               <Label>Transporteur</Label>

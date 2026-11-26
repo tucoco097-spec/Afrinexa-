@@ -84,11 +84,12 @@ function AdminConvs() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("conversations")
-        .select("*, profiles(full_name, email, phone)")
+        .select("*, profiles!conversations_client_id_fkey(full_name, email, phone)")
         .order("last_message_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Conversation[];
     },
+    retry: false,
   });
   const orderIndex = useQuery({
     queryKey: ["admin-inbox-orders"],
@@ -102,6 +103,7 @@ function AdminConvs() {
       if (error) throw error;
       return (data ?? []) as Order[];
     },
+    retry: false,
   });
   const orderNumbersByClient = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -289,9 +291,27 @@ function AdminConvs() {
   }
   if (convs.isError) {
     return (
-      <p role="alert" className="p-6 text-sm text-destructive">
-        Impossible de charger les conversations. Vérifiez votre connexion puis réessayez.
-      </p>
+      <div
+        role="alert"
+        className="space-y-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-6"
+      >
+        <div>
+          <p className="font-semibold text-destructive">
+            Impossible de charger la boîte de réception.
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Vérifiez votre connexion. Si le problème persiste, contactez l’administrateur technique.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="glass"
+          onClick={() => void convs.refetch()}
+          disabled={convs.isFetching}
+        >
+          {convs.isFetching ? "Nouvel essai…" : "Réessayer"}
+        </Button>
+      </div>
     );
   }
 
@@ -339,6 +359,7 @@ function AdminConvs() {
               <button
                 key={id}
                 onClick={() => setFilter(id)}
+                aria-pressed={filter === id}
                 className={`min-h-9 shrink-0 rounded-full px-3 text-xs font-semibold transition ${filter === id ? "bg-brand text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"}`}
               >
                 {label}
@@ -362,9 +383,18 @@ function AdminConvs() {
                 Chargement des commandes…
               </p>
             ) : orderIndex.isError ? (
-              <p role="alert" className="px-5 py-8 text-center text-sm text-destructive">
-                Impossible de charger les commandes.
-              </p>
+              <div role="alert" className="space-y-3 px-5 py-8 text-center text-sm">
+                <p className="text-destructive">Impossible de charger les commandes.</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="glass"
+                  onClick={() => void orderIndex.refetch()}
+                  disabled={orderIndex.isFetching}
+                >
+                  {orderIndex.isFetching ? "Nouvel essai…" : "Réessayer"}
+                </Button>
+              </div>
             ) : visibleOrders.length === 0 ? (
               <div className="px-5 py-12 text-center">
                 <ShoppingBag className="mx-auto size-8 text-muted-foreground" />
@@ -589,6 +619,7 @@ function AdminConvs() {
             <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
               <div className="min-h-0 min-w-0 flex-1">
                 <ChatThread
+                  key={selected.id}
                   conversationId={selected.id}
                   me={user.id}
                   clientName={selected.profiles?.full_name ?? selected.profiles?.email}

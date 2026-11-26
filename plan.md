@@ -2,9 +2,9 @@
 
 ## Objectif et contraintes
 
-Continuer le site existant dans son dépôt et conserver ses routes, son identité et son déploiement Vercel. La priorité actuelle est l’intégration du cahier des charges « Premium Authentication System »; le sujet du suivi international des marchandises reste en attente. Les éléments des missions antérieures de fret, catalogue et administration restent l’historique du projet.
+Continuer le site existant dans son dépôt et conserver ses routes, son identité et son déploiement Vercel. La priorité actuelle est la correction locale de la messagerie admin et l’amélioration de la gestion des expéditions, selon l’addendum du 25 novembre 2026; l’authentification premium reste le travail historique précédent. L’utilisateur refuse Lovable; la migration de suivi a néanmoins été explicitement autorisée puis appliquée directement sur Supabase le 26 novembre 2026.
 
-Les migrations `0000` à `0005` définissent déjà le schéma utilisé par le projet; ne pas modifier ni appliquer de migration pour cette priorité d’authentification. L’inscription publique attribue le rôle `client` par le déclencheur `handle_new_user`; les rôles privilégiés restent contrôlés côté serveur et ne doivent jamais venir des champs du formulaire ou de `user_metadata`. Ne pas utiliser les identifiants partagés dans la conversation. Google OAuth reste désactivé sans configuration OAuth Google; ne pas prétendre que le fournisseur fonctionne avant son activation.
+Les migrations existantes définissent le schéma utilisé par le projet; ne pas modifier ni appliquer de migration sans autorisation explicite et méthode compatible avec les consignes du dépôt. L’inscription publique attribue le rôle `client` par le déclencheur `handle_new_user`; les rôles privilégiés restent contrôlés côté serveur et ne doivent jamais venir des champs du formulaire ou de `user_metadata`. Ne pas utiliser les identifiants partagés dans la conversation. Google OAuth reste désactivé sans configuration OAuth Google; ne pas prétendre que le fournisseur fonctionne avant son activation.
 
 ## Approche d’implémentation
 
@@ -27,7 +27,7 @@ Les migrations `0000` à `0005` définissent déjà le schéma utilisé par le p
 - `src/integrations/supabase/` reste le client Supabase; aucune clé secrète ne doit être intégrée au bundle navigateur.
 - `public/chipment/` contient les images fournies et les nouveaux visuels illustratifs nécessaires au fret aérien; `manifest.json` reste la référence des images d’origine.
 - `public/manus-routes.json` décrit les routes; il sera maintenu si l’ensemble change.
-- `drizzle/migrations/` reste inchangé conformément au refus explicite de modifier la base.
+- `drizzle/migrations/` reste inchangé conformément aux consignes du dépôt; la migration Supabase autorisée est suivie dans l’historique distant du projet et dans le dossier de propositions.
 - `vercel.json` portera les en-têtes HTTP additionnels si la configuration actuelle ne les fournit pas.
 
 ## Design
@@ -55,3 +55,16 @@ Les migrations `0000` à `0005` définissent déjà le schéma utilisé par le p
 - **Espace client et accès** : ajouter l’édition des champs déjà présents dans `profiles` et le changement de mot de passe via la session Supabase. Conserver commandes, numéros de suivi, expéditions, historique et déconnexion. Garder `/admin` derrière la garde staff/RLS existante; les changements n’élargissent pas le périmètre de gestion admin.
 - **Persistance Remember Me** : le client généré, à conserver sans modification, persiste actuellement les sessions. L’option du formulaire mémorisera l’adresse email seulement, jamais le mot de passe, et l’interface l’indiquera clairement; elle ne devra pas laisser croire qu’elle modifie la durée de session Supabase.
 - **Fichiers concernés** : `src/routes/auth.tsx`, nouveaux composants d’authentification dans `src/components/auth/`, routes publiques de récupération/réinitialisation, `src/routes/_authenticated/espace.tsx`, affichage du shell dans `src/routes/__root.tsx`, et `public/manus-routes.json`. `src/routeTree.gen.ts`, `src/integrations/supabase/client.ts` et `previewAuthStorage.ts` sont générés et ne sont pas édités manuellement.
+
+## Addendum — suivi et messagerie (25 novembre 2026)
+
+- **Priorité** : corriger l’accès à la boîte de réception admin et rendre la gestion des expéditions trouvable et compréhensible, sans casser les routes, l’identité ni le déploiement existants.
+- **Messagerie** : `conversations` contient deux clés étrangères vers `profiles` (`client_id` et `archived_by`); la boîte admin doit joindre explicitement `conversations_client_id_fkey`, échouer rapidement avec un message clair et permettre de relancer la requête. Le correctif reste local jusqu’à une demande explicite de publication.
+- **Gestion des expéditions avec le schéma actuel** : une page admin dédiée peut lister les expéditions réelles, rechercher/filtrer et ouvrir la fiche existante pour ajouter des statuts, lieux textuels, dates et notes; états d’erreur/chargement/vide doivent être explicites. Aucun événement fictif ni aucune donnée client ne sera écrit pour tester.
+- **Carte et zones** : `shipments`, `shipment_events` et `track_shipment` ne stockent/retournent pas de coordonnées; aucune table de zones ou règle d’escalade et aucun flux GPS transporteur n’existent. Ne jamais géocoder approximativement, inventer une position ou présenter une escalade comme automatique. L’utilisateur a refusé Lovable; les instructions du dépôt interdisent les modifications manuelles du schéma. Les coordonnées/zones persistantes restent donc bloquées jusqu’à l’autorisation explicite d’une méthode de schéma compatible.
+- **Publication** : ne pas pousser ni déployer les changements de suivi sans demande explicite.
+
+
+## État après migration (26 novembre 2026)
+
+La migration `afrinexa_tracking_coordinates_zones` (version `20261126010901`) est appliquée au projet Supabase après accord explicite. L’interface admin locale permet de saisir des coordonnées confirmées pour le départ, la destination et les étapes, et de créer des zones circulaires qui restent inactives. Le RPC public ne retourne que les coordonnées confirmées. Aucune coordonnée, zone ou étape de test n’a été écrite en production. Aucun GPS transporteur, contrôle de zone, déclenchement d’escalade ni envoi d’alerte automatique n’est en place. Les corrections de messagerie, d’expéditions et de tracking restent dans le dépôt local; aucun commit, push ou déploiement n’a été effectué. Voir le TODO pour les contrôles et limites vérifiés.
