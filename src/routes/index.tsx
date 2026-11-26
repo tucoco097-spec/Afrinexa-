@@ -75,24 +75,53 @@ const SERVICES = [
     icon: Plane,
     title: "Fret aérien",
     text: "Pour les envois urgents et les petites quantités. Les références AWB et les étapes confirmées sont consultables dans le suivi.",
+    image: "/chipment/air-fret-illustration-02.jpg",
+    imageLabel: "Illustration",
   },
   {
     to: "/transport-maritime",
     icon: Ship,
     title: "Fret maritime",
     text: "Groupage LCL ou conteneur complet FCL, selon l’option retenue dans le devis.",
+    image: "/chipment/IMG-20251127-WA0003.jpg",
+    imageLabel: "Visuel indicatif",
   },
   {
     to: "/services",
     icon: Handshake,
     title: "Sourcing en Chine",
     text: "Décrivez votre besoin à l’équipe pour rechercher et négocier auprès de fournisseurs.",
+    image: "/chipment/IMG-20251127-WA0025.jpg",
+    imageLabel: "Visuel indicatif",
   },
   {
     to: "/services",
     icon: ShieldCheck,
     title: "Contrôle qualité",
     text: "L’inspection et les photos sont partagées lorsque le service est prévu au devis.",
+    image: "/chipment/IMG-20251127-WA0004.jpg",
+    imageLabel: "Visuel indicatif",
+  },
+] as const;
+
+const PRACTICAL_INFO = [
+  {
+    icon: Globe2,
+    title: "Destinations selon le devis",
+    text: "Les options de transport et de destination sont confirmées avec l’équipe avant validation.",
+    image: "/chipment/IMG-20251127-WA0016.jpg",
+  },
+  {
+    icon: BadgePercent,
+    title: "Prix et paiement clarifiés",
+    text: "Le prix, le transport, les frais et les conditions de paiement sont confirmés dans le devis.",
+    image: "/chipment/IMG-20251127-WA0002.jpg",
+  },
+  {
+    icon: MessageCircle,
+    title: "Une équipe à vos côtés",
+    text: "Échangez avec l’équipe via la messagerie de votre espace client ou la page Contact.",
+    image: "/chipment/IMG-20251127-WA0017.jpg",
   },
 ] as const;
 
@@ -342,25 +371,41 @@ function Index() {
               </Link>
             </div>
           </Reveal>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {SERVICES.map((service, index) => (
               <Reveal key={service.title} delay={index * 0.04}>
                 <Link
                   to={service.to}
-                  className="group flex h-full min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[0.06] p-5 transition duration-200 hover:-translate-y-1 hover:border-amber-300/40 hover:bg-white/[0.1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 motion-reduce:transform-none motion-reduce:transition-none"
+                  className="group flex h-full min-h-[350px] flex-col overflow-hidden rounded-2xl border border-white/20 bg-white/[0.05] shadow-[0_18px_40px_-28px_rgba(0,0,0,.75)] transition duration-200 hover:-translate-y-1 hover:border-amber-300/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 motion-reduce:transform-none motion-reduce:transition-none"
                 >
-                  <service.icon className="size-7 text-amber-300" aria-hidden="true" />
-                  <h3 className="mt-4 text-lg font-bold">{service.title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/70">
-                    {service.text}
-                  </p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-amber-200">
-                    En savoir plus{" "}
-                    <ArrowRight
-                      className="size-3.5 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                  <div className="relative h-36 shrink-0 overflow-hidden bg-[#102e49]">
+                    <img
+                      src={service.image}
+                      alt=""
                       aria-hidden="true"
+                      loading="lazy"
+                      decoding="async"
+                      className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transform-none motion-reduce:transition-none"
                     />
-                  </span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0b2035]/55 via-transparent to-[#0b2035]/10" />
+                    <span className="absolute left-3 top-3 rounded-full border border-white/35 bg-[#071a2d]/45 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white/90 backdrop-blur-md">
+                      {service.imageLabel}
+                    </span>
+                  </div>
+                  <div className="glass flex flex-1 flex-col border-t-0 p-5 text-slate-900">
+                    <service.icon className="size-7 text-amber-700" aria-hidden="true" />
+                    <h3 className="mt-3 text-lg font-bold">{service.title}</h3>
+                    <p className="mt-2 flex-1 text-sm leading-relaxed text-slate-600">
+                      {service.text}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-sky-800">
+                      En savoir plus{" "}
+                      <ArrowRight
+                        className="size-3.5 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </div>
                 </Link>
               </Reveal>
             ))}
@@ -555,36 +600,35 @@ function Index() {
         className="mx-auto max-w-7xl px-5 py-8 sm:px-8 md:py-10"
         aria-label="Informations pratiques"
       >
-        <div className="grid gap-3 md:grid-cols-3">
-          <Reveal>
-            <article className="h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-              <Globe2 className="size-7 text-sky-700" aria-hidden="true" />
-              <h3 className="mt-4 text-lg font-bold text-slate-900">Destinations selon le devis</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Les options de transport et de destination sont confirmées avec l’équipe avant
-                validation.
-              </p>
-            </article>
-          </Reveal>
-          <Reveal delay={0.05}>
-            <article className="h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-              <BadgePercent className="size-7 text-amber-600" aria-hidden="true" />
-              <h3 className="mt-4 text-lg font-bold text-slate-900">Prix et paiement clarifiés</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Le prix, le transport, les frais et les conditions de paiement sont confirmés dans
-                le devis.
-              </p>
-            </article>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <article className="h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-              <MessageCircle className="size-7 text-sky-700" aria-hidden="true" />
-              <h3 className="mt-4 text-lg font-bold text-slate-900">Une équipe à vos côtés</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Échangez avec l’équipe via la messagerie de votre espace client ou la page Contact.
-              </p>
-            </article>
-          </Reveal>
+        <div className="grid gap-4 md:grid-cols-3">
+          {PRACTICAL_INFO.map((info, index) => (
+            <Reveal key={info.title} delay={index * 0.05}>
+              <article className="group relative isolate flex min-h-[280px] h-full flex-col overflow-hidden rounded-2xl border border-white/75 bg-slate-900 shadow-card">
+                <img
+                  src={info.image}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.035] motion-reduce:transform-none motion-reduce:transition-none"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#071a2d]/55 via-transparent to-[#071a2d]/10" />
+                <span className="absolute left-3 top-3 rounded-full border border-white/35 bg-[#071a2d]/45 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white/90 backdrop-blur-md">
+                  Visuel indicatif
+                </span>
+                <div className="relative mt-auto p-3 sm:p-4">
+                  <div className="glass rounded-xl p-4 sm:p-5">
+                    <info.icon
+                      className={`size-7 ${info.title === "Prix et paiement clarifiés" ? "text-amber-700" : "text-sky-800"}`}
+                      aria-hidden="true"
+                    />
+                    <h3 className="mt-3 text-lg font-bold text-slate-900">{info.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{info.text}</p>
+                  </div>
+                </div>
+              </article>
+            </Reveal>
+          ))}
         </div>
       </section>
 
