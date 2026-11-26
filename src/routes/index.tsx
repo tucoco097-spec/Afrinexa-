@@ -9,23 +9,19 @@ import {
   Handshake,
   MessageCircle,
   PackageCheck,
-  Pause,
   Plane,
-  Play,
   Search,
   ShieldCheck,
   Ship,
   Sparkles,
-  Tag,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import hero from "@/assets/hero-port.jpg";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Reveal } from "@/components/site/Reveal";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
-import { categoriesQuery, type Product } from "@/lib/shop";
+import { categoriesQuery, type Product, useImageUrl } from "@/lib/shop";
 import { useSettings, useUser } from "@/lib/site";
 
 export const Route = createFileRoute("/")({
@@ -54,18 +50,21 @@ const HERO_SLIDES = [
     title: "Trouvez vos marchandises.",
     emphasis: "Du catalogue au devis.",
     text: "Parcourez les produits publiés par l’équipe Afrinexa ou décrivez votre besoin de sourcing.",
+    image: "/hero/sourcing.jpg",
   },
   {
     eyebrow: "Transport international",
     title: "Un acheminement adapté.",
     emphasis: "Aérien ou maritime.",
     text: "Choisissez votre mode de transport selon les options et conditions confirmées dans le devis.",
+    image: "/hero/freight.jpg",
   },
   {
     eyebrow: "Suivi de vos expéditions",
     title: "Gardez le fil de votre commande.",
     emphasis: "Étape après étape.",
     text: "Retrouvez les événements confirmés de votre expédition dans l’espace de suivi Afrinexa.",
+    image: "/hero/tracking.jpg",
   },
 ] as const;
 
@@ -157,10 +156,32 @@ const STEPS = [
   },
 ];
 
+function FeaturedCategoryImage({ path }: { path?: string | null | undefined }) {
+  const imageUrl = useImageUrl(path);
+
+  if (!imageUrl) {
+    return (
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-br from-[#0d2a45] via-[#17486a] to-[#071d31]"
+      />
+    );
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transform-none motion-reduce:transition-none"
+    />
+  );
+}
+
 function Index() {
   const reducedMotion = useReducedMotion();
   const [slideIndex, setSlideIndex] = useState(0);
-  const [autoplayPaused, setAutoplayPaused] = useState(false);
   const products = useQuery({
     queryKey: ["home-featured-products"],
     queryFn: async () => {
@@ -181,29 +202,66 @@ function Index() {
   const topCategories = (categories.data ?? [])
     .filter((category) => !category.parent_id)
     .slice(0, 8);
+  const categoryIds = topCategories.map((category) => category.id);
+  const categoryImageProducts = useQuery({
+    queryKey: ["home-category-images", categoryIds],
+    enabled: categoryIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("category_id, images")
+        .eq("published", true)
+        .in("category_id", categoryIds)
+        .order("popularity", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const categoryImageById = new Map<string, string>();
+  for (const product of categoryImageProducts.data ?? []) {
+    const image = product.images?.[0];
+    if (product.category_id && image && !categoryImageById.has(product.category_id)) {
+      categoryImageById.set(product.category_id, image);
+    }
+  }
   const activeSlide = HERO_SLIDES[slideIndex]!;
 
   useEffect(() => {
-    if (reducedMotion || autoplayPaused) return;
+    if (reducedMotion) return;
     const timer = window.setInterval(() => {
       setSlideIndex((current) => (current + 1) % HERO_SLIDES.length);
     }, 6500);
     return () => window.clearInterval(timer);
-  }, [autoplayPaused, reducedMotion]);
+  }, [reducedMotion]);
 
   return (
     <div className="storefront-light overflow-hidden">
       <section className="relative isolate overflow-hidden bg-[#0b2035] text-white">
-        <img
-          src={hero}
-          alt="Port de conteneurs et avion de fret"
-          width={1600}
-          height={1008}
-          fetchPriority="high"
-          className="absolute inset-0 size-full object-cover object-center"
+        <AnimatePresence initial={false}>
+          <motion.img
+            key={activeSlide.image}
+            src={activeSlide.image}
+            alt=""
+            aria-hidden="true"
+            width={1600}
+            height={900}
+            loading={slideIndex === 0 ? "eager" : "lazy"}
+            fetchPriority={slideIndex === 0 ? "high" : "auto"}
+            initial={{ opacity: 0, scale: 1.025 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7, ease: "easeInOut" }}
+            className="absolute inset-0 size-full object-cover object-center"
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#071a2d]/84 via-[#0a2137]/58 to-[#0a2137]/20 md:from-[#071a2d]/76 md:via-[#0a2137]/42 md:to-[#0a2137]/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#071a2d]/42 via-transparent to-[#071a2d]/12" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-amber-300/10"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#071a2d]/90 via-[#0a2137]/76 to-[#0a2137]/45" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#071a2d]/55 via-transparent to-[#071a2d]/20" />
         <div className="relative mx-auto flex min-h-[460px] w-full max-w-7xl items-center px-5 py-16 sm:px-8 md:min-h-[500px] md:py-20">
           <div className="w-full max-w-2xl">
             <AnimatePresence mode="wait" initial={false}>
@@ -216,13 +274,13 @@ function Index() {
                   reducedMotion ? { duration: 0 } : { duration: 0.42, ease: [0.22, 1, 0.36, 1] }
                 }
               >
-                <p className="inline-flex items-center gap-2 rounded-full border border-amber-200/25 bg-amber-300/10 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.17em] text-amber-200">
+                <p className="inline-flex items-center gap-2 rounded-full border border-amber-200/45 bg-[#0b2035]/55 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.17em] text-amber-100 shadow-lg backdrop-blur-md">
                   <Sparkles className="size-3.5" aria-hidden="true" /> {activeSlide.eyebrow}
                 </p>
                 <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
                   {activeSlide.title} <span className="text-amber-300">{activeSlide.emphasis}</span>
                 </h1>
-                <p className="mt-5 max-w-xl text-sm leading-6 text-white/85 sm:text-base md:text-lg">
+                <p className="mt-5 max-w-xl text-sm leading-6 text-white/90 sm:text-base md:text-lg">
                   {activeSlide.text}
                 </p>
               </motion.div>
@@ -230,9 +288,9 @@ function Index() {
             <div className="mt-7 flex flex-wrap gap-3">
               <Button
                 asChild
-                variant="hero"
+                variant="gold"
                 size="lg"
-                className="bg-amber-400 text-[#142a40] hover:bg-amber-300"
+                className="text-[#102a44] shadow-[0_12px_30px_-12px_rgba(245,158,11,.8)]"
               >
                 <a href="#catalogue">
                   Découvrir le catalogue <ArrowRight aria-hidden="true" />
@@ -240,51 +298,12 @@ function Index() {
               </Button>
               <Button
                 asChild
-                variant="glass"
+                variant="outline"
                 size="lg"
-                className="border-white/35 bg-white/10 text-white hover:bg-white/20"
+                className="border-amber-100/35 bg-[#071a2d]/60 text-white shadow-md backdrop-blur-lg hover:border-amber-100/55 hover:bg-[#0d2a45]/75"
               >
                 <Link to="/services">Discuter avec un agent</Link>
               </Button>
-            </div>
-            <div
-              className="mt-8 flex items-center gap-2"
-              role="group"
-              aria-label="Diapositives de présentation"
-            >
-              {HERO_SLIDES.map((slide, index) => (
-                <button
-                  key={slide.eyebrow}
-                  type="button"
-                  onClick={() => setSlideIndex(index)}
-                  aria-label={`Afficher la présentation ${index + 1} : ${slide.eyebrow}`}
-                  aria-pressed={slideIndex === index}
-                  className={`h-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b2035] motion-reduce:transition-none ${slideIndex === index ? "w-8 bg-amber-400" : "w-2.5 bg-white/55 hover:bg-white/85"}`}
-                />
-              ))}
-              <span className="ml-2 text-xs text-white/70">
-                {slideIndex + 1} / {HERO_SLIDES.length}
-              </span>
-              {!reducedMotion && (
-                <button
-                  type="button"
-                  onClick={() => setAutoplayPaused((paused) => !paused)}
-                  aria-label={
-                    autoplayPaused
-                      ? "Reprendre le défilement automatique"
-                      : "Mettre le défilement automatique en pause"
-                  }
-                  aria-pressed={autoplayPaused}
-                  className="ml-1 inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b2035] motion-reduce:transition-none"
-                >
-                  {autoplayPaused ? (
-                    <Play className="size-3.5" aria-hidden="true" />
-                  ) : (
-                    <Pause className="size-3.5" aria-hidden="true" />
-                  )}
-                  <span>{autoplayPaused ? "Reprendre" : "Pause"}</span>
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -314,18 +333,18 @@ function Index() {
                 <Link
                   to="/boutique"
                   search={{ q: undefined, cat: category.id, sort: undefined, page: undefined }}
-                  className="group flex min-h-28 h-full flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 py-5 text-center shadow-[0_5px_18px_-14px_rgba(20,41,64,.4)] transition duration-200 hover:-translate-y-1 hover:border-amber-300 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent motion-reduce:transform-none motion-reduce:transition-none"
+                  className="group relative block aspect-[4/3] min-h-32 overflow-hidden rounded-2xl border border-white/40 bg-slate-900 shadow-[0_8px_24px_-16px_rgba(20,41,64,.7)] transition duration-200 hover:-translate-y-1 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent motion-reduce:transform-none motion-reduce:transition-none"
                 >
-                  <span className="grid size-10 place-items-center rounded-full bg-amber-50 text-amber-600 transition duration-200 group-hover:bg-amber-100 motion-reduce:transition-none">
-                    <Tag className="size-4" aria-hidden="true" />
-                  </span>
-                  <span className="mt-3 text-sm font-bold text-slate-900">{category.name}</span>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-500">
-                    Explorer{" "}
-                    <ArrowRight
-                      className="size-3 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
-                      aria-hidden="true"
-                    />
+                  <FeaturedCategoryImage path={categoryImageById.get(category.id)} />
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/15 to-slate-950/5"
+                  />
+                  <span className="absolute inset-x-3 bottom-3 rounded-xl border border-white/20 bg-slate-950/35 px-3 py-2.5 text-left text-white shadow-lg backdrop-blur-lg transition-colors group-hover:bg-slate-950/45">
+                    <span className="block text-sm font-bold sm:text-base">{category.name}</span>
+                    <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.13em] text-white/75">
+                      Explorer
+                    </span>
                   </span>
                 </Link>
               </Reveal>
